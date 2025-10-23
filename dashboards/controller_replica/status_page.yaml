@@ -1,0 +1,276 @@
+# Chiltrix Controller - Status Page
+# Shows detailed system status and diagnostics
+
+type: vertical-stack
+cards:
+  # Header with Back Button
+  - type: horizontal-stack
+    cards:
+      - type: custom:button-card
+        name: ← Back
+        tap_action:
+          action: navigate
+          navigation_path: /lovelace/chiltrix-main
+        styles:
+          card:
+            - background: 'linear-gradient(135deg, #4a5568 0%, #2d3748 100%)'
+            - height: 60px
+          name:
+            - color: white
+            - font-size: 20px
+            - font-weight: bold
+      
+      - type: markdown
+        content: |
+          <div style="text-align: center; padding: 15px; font-size: 24px; font-weight: bold; color: #2d3748;">
+          STATUS DISPLAY
+          </div>
+        style: |
+          ha-card {
+            background: linear-gradient(135deg, #5DCCCC 0%, #4AB8B8 100%);
+            box-shadow: none;
+            border: none;
+          }
+
+  # System Status Overview
+  - type: entities
+    title: System Information
+    show_header_toggle: false
+    style: |
+      ha-card {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border: 2px solid #dee2e6;
+      }
+    entities:
+      - entity: sensor.cx_operating_state
+        name: Operating Mode
+        icon: mdi:state-machine
+      - entity: binary_sensor.cx_power_status
+        name: Power Status
+        icon: mdi:power
+      - entity: sensor.cx_run_hours
+        name: Total Run Hours
+        icon: mdi:clock-outline
+      - entity: sensor.cx_compressor_starts
+        name: Compressor Starts
+        icon: mdi:counter
+      - entity: sensor.cx_defrost_count
+        name: Defrost Cycles
+        icon: mdi:snowflake-melt
+
+  # Temperature Monitoring
+  - type: custom:button-card
+    name: " "
+    styles:
+      card:
+        - background: '#4a5a5a'
+        - padding: 15px
+        - border-radius: 10px
+    custom_fields:
+      temps: |
+        <div style="color: #fff;">
+          <h3 style="text-align: center; color: #5DCCCC; margin-bottom: 20px;">TEMPERATURE MONITORING</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 5px;">
+              <div style="font-size: 14px; color: #aaa;">Water Inlet</div>
+              <div style="font-size: 32px; font-weight: bold; color: #4ECDC4;">
+                {{ states('sensor.cx_water_inlet_temperature') }}°C
+              </div>
+            </div>
+            <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 5px;">
+              <div style="font-size: 14px; color: #aaa;">Water Outlet</div>
+              <div style="font-size: 32px; font-weight: bold; color: #FF6B6B;">
+                {{ states('sensor.cx_water_outlet_temperature') }}°C
+              </div>
+            </div>
+            <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 5px;">
+              <div style="font-size: 14px; color: #aaa;">Ambient (Outdoor)</div>
+              <div style="font-size: 32px; font-weight: bold; color: #95E1D3;">
+                {{ states('sensor.cx_ambient_temperature') }}°C
+              </div>
+            </div>
+            <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 5px;">
+              <div style="font-size: 14px; color: #aaa;">Coil Temp</div>
+              <div style="font-size: 32px; font-weight: bold; color: #FFD93D;">
+                {{ states('sensor.cx_coil_temperature') }}°C
+              </div>
+            </div>
+            <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 5px;">
+              <div style="font-size: 14px; color: #aaa;">Discharge Temp</div>
+              <div style="font-size: 32px; font-weight: bold; color: #F38181;">
+                {{ states('sensor.cx_discharge_temperature') }}°C
+              </div>
+            </div>
+            <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 5px;">
+              <div style="font-size: 14px; color: #aaa;">Suction Temp</div>
+              <div style="font-size: 32px; font-weight: bold; color: #A8E6CF;">
+                {{ states('sensor.cx_suction_temperature') }}°C
+              </div>
+            </div>
+          </div>
+        </div>
+
+  # Performance Metrics
+  - type: custom:button-card
+    name: " "
+    styles:
+      card:
+        - background: '#3a4a4a'
+        - padding: 15px
+        - border-radius: 10px
+    custom_fields:
+      performance: |
+        <div style="color: #fff;">
+          <h3 style="text-align: center; color: #5DCCCC; margin-bottom: 20px;">PERFORMANCE METRICS</h3>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; text-align: center;">
+            <div>
+              <div style="font-size: 14px; color: #aaa;">Power</div>
+              <div style="font-size: 28px; font-weight: bold; color: #FF6B6B;">
+                {{ states('sensor.cx_current_power') }}W
+              </div>
+            </div>
+            <div>
+              <div style="font-size: 14px; color: #aaa;">COP</div>
+              <div style="font-size: 28px; font-weight: bold; color: #4ECDC4;">
+                {{ states('sensor.cx_cop') }}
+              </div>
+            </div>
+            <div>
+              <div style="font-size: 14px; color: #aaa;">Thermal Output</div>
+              <div style="font-size: 28px; font-weight: bold; color: #FFD93D;">
+                {{ states('sensor.cx_thermal_power_output') }}kW
+              </div>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px; text-align: center;">
+            <div>
+              <div style="font-size: 12px; color: #aaa;">Flow</div>
+              <div style="font-size: 20px; font-weight: bold;">
+                {{ states('sensor.cx_flow_rate') }}L/M
+              </div>
+            </div>
+            <div>
+              <div style="font-size: 12px; color: #aaa;">Compressor</div>
+              <div style="font-size: 20px; font-weight: bold;">
+                {{ states('sensor.cx_compressor_speed') }}%
+              </div>
+            </div>
+            <div>
+              <div style="font-size: 12px; color: #aaa;">Fan</div>
+              <div style="font-size: 20px; font-weight: bold;">
+                {{ states('sensor.cx_fan_speed') }}%
+              </div>
+            </div>
+            <div>
+              <div style="font-size: 12px; color: #aaa;">Pump</div>
+              <div style="font-size: 20px; font-weight: bold;">
+                {{ states('sensor.cx_pump_speed') }}%
+              </div>
+            </div>
+          </div>
+        </div>
+
+  # Active Modes Display
+  - type: horizontal-stack
+    cards:
+      - type: custom:button-card
+        entity: binary_sensor.cx_heating_mode
+        name: HEATING
+        show_state: false
+        icon: mdi:fire
+        styles:
+          card:
+            - height: 100px
+          icon:
+            - width: 50px
+        state:
+          - value: 'on'
+            styles:
+              card:
+                - background: 'linear-gradient(135deg, #FF6B6B 0%, #C92A2A 100%)'
+                - box-shadow: '0 0 20px rgba(255,107,107,0.6)'
+              icon:
+                - color: white
+              name:
+                - color: white
+          - value: 'off'
+            styles:
+              card:
+                - background: '#2d3748'
+              icon:
+                - color: '#666'
+              name:
+                - color: '#999'
+      
+      - type: custom:button-card
+        entity: binary_sensor.cx_cooling_mode
+        name: COOLING
+        show_state: false
+        icon: mdi:snowflake
+        styles:
+          card:
+            - height: 100px
+          icon:
+            - width: 50px
+        state:
+          - value: 'on'
+            styles:
+              card:
+                - background: 'linear-gradient(135deg, #4ECDC4 0%, #1A535C 100%)'
+                - box-shadow: '0 0 20px rgba(78,205,196,0.6)'
+              icon:
+                - color: white
+              name:
+                - color: white
+          - value: 'off'
+            styles:
+              card:
+                - background: '#2d3748'
+              icon:
+                - color: '#666'
+              name:
+                - color: '#999'
+      
+      - type: custom:button-card
+        entity: binary_sensor.cx_dhw_mode
+        name: DHW
+        show_state: false
+        icon: mdi:water-boiler
+        styles:
+          card:
+            - height: 100px
+          icon:
+            - width: 50px
+        state:
+          - value: 'on'
+            styles:
+              card:
+                - background: 'linear-gradient(135deg, #FFD93D 0%, #F6A623 100%)'
+                - box-shadow: '0 0 20px rgba(255,217,61,0.6)'
+              icon:
+                - color: white
+              name:
+                - color: white
+          - value: 'off'
+            styles:
+              card:
+                - background: '#2d3748'
+              icon:
+                - color: '#666'
+              name:
+                - color: '#999'
+
+  # System Pressure and Flow
+  - type: entities
+    title: System Measurements
+    show_header_toggle: false
+    entities:
+      - entity: sensor.cx_system_pressure
+        name: System Pressure
+        icon: mdi:gauge
+      - entity: sensor.cx_flow_rate
+        name: Water Flow Rate
+        icon: mdi:waves
+      - entity: sensor.cx_water_temperature_delta
+        name: Temperature Delta (ΔT)
+        icon: mdi:delta

@@ -1,0 +1,286 @@
+# Chiltrix Controller - Error Diagnostics Page
+# Error codes, history, and troubleshooting
+
+type: vertical-stack
+cards:
+  # Header with Back Button
+  - type: horizontal-stack
+    cards:
+      - type: custom:button-card
+        name: ← Back
+        tap_action:
+          action: navigate
+          navigation_path: /lovelace/chiltrix-main
+        styles:
+          card:
+            - background: 'linear-gradient(135deg, #4a5568 0%, #2d3748 100%)'
+            - height: 60px
+          name:
+            - color: white
+            - font-size: 20px
+            - font-weight: bold
+      
+      - type: markdown
+        content: |
+          <div style="text-align: center; padding: 15px; font-size: 24px; font-weight: bold; color: #2d3748;">
+          ERROR DIAGNOSTICS
+          </div>
+        style: |
+          ha-card {
+            background: linear-gradient(135deg, #5DCCCC 0%, #4AB8B8 100%);
+            box-shadow: none;
+            border: none;
+          }
+
+  # Current Error Status - Big Alert
+  - type: conditional
+    conditions:
+      - entity: binary_sensor.cx_error_status
+        state: 'on'
+    card:
+      type: custom:button-card
+        name: " "
+        styles:
+          card:
+            - background: 'linear-gradient(135deg, #FA5252 0%, #C92A2A 100%)'
+            - padding: 30px
+            - border-radius: 20px
+            - box-shadow: '0 10px 30px rgba(250,82,82,0.8)'
+            - animation: 'pulse 2s ease infinite'
+        custom_fields:
+          error_alert: |
+            <div style="text-align: center; color: white;">
+              <div style="font-size: 80px; margin-bottom: 20px;">⚠️</div>
+              <h1 style="margin: 0 0 10px 0; font-size: 36px;">SYSTEM ERROR DETECTED</h1>
+              <div style="font-size: 24px; margin-bottom: 20px;">
+                Error Code: <span style="font-weight: bold; font-size: 48px;">{{ states('sensor.cx_error_code') }}</span>
+              </div>
+              <div style="font-size: 18px; opacity: 0.9;">
+                System may be operating in limited mode or shut down
+              </div>
+            </div>
+
+  # No Error - All Clear
+  - type: conditional
+    conditions:
+      - entity: binary_sensor.cx_error_status
+        state: 'off'
+    card:
+      type: custom:button-card
+        name: " "
+        styles:
+          card:
+            - background: 'linear-gradient(135deg, #51CF66 0%, #37B24D 100%)'
+            - padding: 30px
+            - border-radius: 20px
+            - box-shadow: '0 10px 30px rgba(81,207,102,0.4)'
+        custom_fields:
+          status_ok: |
+            <div style="text-align: center; color: white;">
+              <div style="font-size: 80px; margin-bottom: 20px;">✓</div>
+              <h1 style="margin: 0 0 10px 0; font-size: 36px;">SYSTEM OPERATING NORMALLY</h1>
+              <div style="font-size: 18px; opacity: 0.9;">
+                No errors detected
+              </div>
+            </div>
+
+  # Error Code Display with Details
+  - type: custom:button-card
+    name: " "
+    styles:
+      card:
+        - background: '#2d3748'
+        - padding: 20px
+        - border-radius: 15px
+    custom_fields:
+      error_codes: |
+        <div style="color: white;">
+          <h2 style="margin-bottom: 20px;">Error Code Status</h2>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; text-align: center;">
+              <div style="font-size: 16px; color: #aaa;">Error Code E1</div>
+              <div style="font-size: 48px; font-weight: bold; margin: 10px 0;">
+                {% if states('sensor.cx_error_code')|int > 0 %}
+                  {{ states('sensor.cx_error_code') }}
+                {% else %}
+                  --
+                {% endif %}
+              </div>
+              <div style="font-size: 14px; color: {{ 'rgba(250,82,82,1)' if states('sensor.cx_error_code')|int > 0 else 'rgba(81,207,102,1)' }};">
+                {% if states('sensor.cx_error_code')|int > 0 %}ACTIVE{% else %}CLEAR{% endif %}
+              </div>
+            </div>
+            <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; text-align: center;">
+              <div style="font-size: 16px; color: #aaa;">Error Code E2</div>
+              <div style="font-size: 48px; font-weight: bold; margin: 10px 0;">--</div>
+              <div style="font-size: 14px; color: rgba(81,207,102,1);">CLEAR</div>
+            </div>
+          </div>
+        </div>
+
+  # Common Error Codes Reference
+  - type: markdown
+    content: |
+      ### 📖 Common Error Codes Reference
+      
+      | Code | Description | Action |
+      |------|-------------|--------|
+      | **E01** | High Pressure | Check refrigerant levels, clean coils |
+      | **E02** | Low Pressure | Check for refrigerant leaks |
+      | **E03** | Flow Switch | Check water flow, pump operation |
+      | **E04** | Freeze Protection | Check antifreeze level, water temp |
+      | **E05** | High Discharge Temp | Reduce load, check compressor |
+      | **E06** | Low Suction Temp | Check expansion valve |
+      | **E07** | Communication Error | Check wiring, restart system |
+      | **E08** | Sensor Fault | Check sensor connections |
+      | **E09** | Phase Protection | Check power supply |
+      | **E10** | Compressor Overload | Allow cooldown, check voltage |
+      
+      **Note:** Refer to your Chiltrix manual for model-specific error codes.
+    style: |
+      ha-card {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border: 2px solid #dee2e6;
+        padding: 15px;
+      }
+
+  # System Health Indicators
+  - type: custom:button-card
+    name: " "
+    styles:
+      card:
+        - background: '#3a4a4a'
+        - padding: 20px
+        - border-radius: 15px
+    custom_fields:
+      health: |
+        <div style="color: white;">
+          <h2 style="margin-bottom: 20px;">⚕️ System Health Check</h2>
+          <div style="display: grid; gap: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px;">
+              <span>Communication Status</span>
+              <span style="color: #51CF66; font-weight: bold;">✓ ONLINE</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px;">
+              <span>Power Supply</span>
+              <span style="color: {{ '#51CF66' if is_state('binary_sensor.cx_power_status', 'on') else '#FA5252' }}; font-weight: bold;">
+                {% if is_state('binary_sensor.cx_power_status', 'on') %}✓ NORMAL{% else %}⚠ OFF{% endif %}
+              </span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px;">
+              <span>Water Flow</span>
+              <span style="color: {{ '#51CF66' if states('sensor.cx_flow_rate')|float > 10 else '#FFD93D' }}; font-weight: bold;">
+                {{ states('sensor.cx_flow_rate') }} L/M
+              </span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px;">
+              <span>System Pressure</span>
+              <span style="color: {{ '#51CF66' if states('sensor.cx_system_pressure')|float > 0.5 else '#FA5252' }}; font-weight: bold;">
+                {{ states('sensor.cx_system_pressure') }} bar
+              </span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px;">
+              <span>Compressor Speed</span>
+              <span style="color: #4ECDC4; font-weight: bold;">{{ states('sensor.cx_compressor_speed') }}%</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px;">
+              <span>Defrost Status</span>
+              <span style="color: {{ '#74C0FC' if is_state('binary_sensor.cx_defrost_active', 'on') else '#51CF66' }}; font-weight: bold;">
+                {% if is_state('binary_sensor.cx_defrost_active', 'on') %}⚡ ACTIVE{% else %}✓ NORMAL{% endif %}
+              </span>
+            </div>
+          </div>
+        </div>
+
+  # Troubleshooting Quick Actions
+  - type: horizontal-stack
+    cards:
+      - type: custom:button-card
+        name: RESET ERROR
+        icon: mdi:restart
+        tap_action:
+          action: call-service
+          service: button.press
+          service_data:
+            entity_id: button.cx_error_reset
+        styles:
+          card:
+            - background: 'linear-gradient(135deg, #FFD93D 0%, #FAB005 100%)'
+            - height: 100px
+            - border-radius: 15px
+          name:
+            - color: white
+            - font-size: 18px
+          icon:
+            - color: white
+            - width: 40px
+      
+      - type: custom:button-card
+        name: POWER CYCLE
+        icon: mdi:power-cycle
+        tap_action:
+          action: call-service
+          service: script.cx_power_cycle
+        styles:
+          card:
+            - background: 'linear-gradient(135deg, #FF922B 0%, #FD7E14 100%)'
+            - height: 100px
+            - border-radius: 15px
+          name:
+            - color: white
+            - font-size: 18px
+          icon:
+            - color: white
+            - width: 40px
+      
+      - type: custom:button-card
+        name: CALL SERVICE
+        icon: mdi:phone
+        tap_action:
+          action: url
+          url_path: 'tel:1-800-CHILTRIX'
+        styles:
+          card:
+            - background: 'linear-gradient(135deg, #FA5252 0%, #C92A2A 100%)'
+            - height: 100px
+            - border-radius: 15px
+          name:
+            - color: white
+            - font-size: 18px
+          icon:
+            - color: white
+            - width: 40px
+
+  # Error History Log (if available)
+  - type: logbook
+    entities:
+      - sensor.cx_error_code
+      - binary_sensor.cx_error_status
+    hours_to_show: 168
+    title: Error History (Last 7 Days)
+
+  # System Information for Support
+  - type: entities
+    title: System Information for Technical Support
+    show_header_toggle: false
+    entities:
+      - entity: sensor.cx_run_hours
+        name: Total Runtime Hours
+      - entity: sensor.cx_compressor_starts
+        name: Compressor Start Count
+      - entity: sensor.cx_defrost_count
+        name: Defrost Cycle Count
+      - type: divider
+      - entity: sensor.cx_water_inlet_temperature
+        name: Current Inlet Temp
+      - entity: sensor.cx_water_outlet_temperature
+        name: Current Outlet Temp
+      - entity: sensor.cx_ambient_temperature
+        name: Ambient Temp
+      - type: divider
+      - entity: sensor.cx_current_power
+        name: Power Draw
+      - entity: sensor.cx_compressor_speed
+        name: Compressor Speed
+      - entity: sensor.cx_fan_speed
+        name: Fan Speed

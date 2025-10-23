@@ -1,0 +1,644 @@
+# Chiltrix Heat Pump - Premium Modern Dashboard
+# Superior to the physical controller with real-time analytics and beautiful design
+# Compatible with: CX34, CX35, CX50-2
+
+title: Chiltrix Heat Pump
+theme: slate
+views:
+  # ========================================================================
+  # MAIN DASHBOARD VIEW
+  # ========================================================================
+  - title: Home
+    path: main
+    icon: mdi:home
+    badges: []
+    cards:
+      # Hero Status Card with Dynamic Background
+      - type: custom:button-card
+        entity: sensor.cx_operating_state
+        name: Chiltrix Heat Pump System
+        show_state: false
+        styles:
+          card:
+            - background: |
+                [[[
+                  if (entity.state == '1') return 'linear-gradient(135deg, #FF6B6B 0%, #C92A2A 100%)';
+                  if (entity.state == '2') return 'linear-gradient(135deg, #4ECDC4 0%, #1A535C 100%)';
+                  if (entity.state == '4') return 'linear-gradient(135deg, #FFD93D 0%, #F6A623 100%)';
+                  if (entity.state == '5') return 'linear-gradient(135deg, #74C0FC 0%, #339AF0 100%)';
+                  if (entity.state == '6') return 'linear-gradient(135deg, #FA5252 0%, #C92A2A 100%)';
+                  return 'linear-gradient(135deg, #495057 0%, #212529 100%)';
+                ]]]
+            - height: 200px
+            - border-radius: 20px
+            - padding: 30px
+            - box-shadow: '0 10px 30px rgba(0,0,0,0.3)'
+          name:
+            - color: white
+            - font-size: 28px
+            - font-weight: 300
+            - text-align: left
+        custom_fields:
+          status: |
+            [[[ 
+              const mode_map = {
+                '0': '⚫ System Off',
+                '1': '🔥 Heating Active',
+                '2': '❄️ Cooling Active', 
+                '3': '🔄 Auto Mode',
+                '4': '🚰 DHW Active',
+                '5': '⚡ Defrost Cycle',
+                '6': '⚠️ Error'
+              };
+              return `<div style="color: white; font-size: 48px; font-weight: bold; margin-top: 20px;">
+                ${mode_map[entity.state] || 'Unknown'}
+              </div>`;
+            ]]]
+          cop: |
+            [[[ 
+              const cop = states['sensor.cx_cop'].state;
+              const copNum = parseFloat(cop);
+              let rating = 'Unknown';
+              let color = '#999';
+              if (copNum >= 4.5) { rating = '⭐ Excellent'; color = '#51CF66'; }
+              else if (copNum >= 3.5) { rating = '✓ Very Good'; color = '#94D82D'; }
+              else if (copNum >= 2.5) { rating = '○ Good'; color = '#FFD93D'; }
+              else if (copNum >= 1.5) { rating = '△ Fair'; color = '#FF922B'; }
+              else if (copNum > 0) { rating = '⚠ Poor'; color = '#FA5252'; }
+              
+              return `<div style="position: absolute; top: 30px; right: 30px; text-align: right;">
+                <div style="color: white; font-size: 18px; opacity: 0.9;">COP</div>
+                <div style="color: white; font-size: 52px; font-weight: bold;">${cop}</div>
+                <div style="color: ${color}; font-size: 16px; font-weight: bold;">${rating}</div>
+              </div>`;
+            ]]]
+
+      # Status Indicators Panel
+      - type: horizontal-stack
+        cards:
+          # Power Indicator
+          - type: custom:button-card
+            entity: binary_sensor.cx_power_status
+            name: Power
+            show_state: false
+            styles:
+              card:
+                - height: 100px
+                - border-radius: 15px
+              icon:
+                - width: 50px
+              name:
+                - font-size: 16px
+            state:
+              - value: 'on'
+                icon: mdi:power
+                styles:
+                  card:
+                    - background: 'linear-gradient(135deg, #51CF66 0%, #37B24D 100%)'
+                    - box-shadow: '0 0 20px rgba(81,207,102,0.5)'
+                  icon:
+                    - color: white
+                    - animation: 'pulse 2s ease infinite'
+                  name:
+                    - color: white
+              - value: 'off'
+                icon: mdi:power-off
+                styles:
+                  card:
+                    - background: '#2d3748'
+                  icon:
+                    - color: '#666'
+                  name:
+                    - color: '#999'
+          
+          # Defrost Indicator
+          - type: custom:button-card
+            entity: binary_sensor.cx_defrost_active
+            name: Defrost
+            show_state: false
+            icon: mdi:snowflake-melt
+            styles:
+              card:
+                - height: 100px
+                - border-radius: 15px
+              icon:
+                - width: 50px
+              name:
+                - font-size: 16px
+            state:
+              - value: 'on'
+                styles:
+                  card:
+                    - background: 'linear-gradient(135deg, #74C0FC 0%, #339AF0 100%)'
+                    - box-shadow: '0 0 20px rgba(116,192,252,0.5)'
+                  icon:
+                    - color: white
+                    - animation: 'blink 1s ease infinite'
+                  name:
+                    - color: white
+              - value: 'off'
+                styles:
+                  card:
+                    - background: '#2d3748'
+                  icon:
+                    - color: '#666'
+                  name:
+                    - color: '#999'
+          
+          # Error Indicator
+          - type: custom:button-card
+            entity: binary_sensor.cx_error_status
+            name: Error
+            show_state: false
+            icon: mdi:alert-circle
+            styles:
+              card:
+                - height: 100px
+                - border-radius: 15px
+              icon:
+                - width: 50px
+              name:
+                - font-size: 16px
+            state:
+              - value: 'on'
+                styles:
+                  card:
+                    - background: 'linear-gradient(135deg, #FA5252 0%, #C92A2A 100%)'
+                    - box-shadow: '0 0 20px rgba(250,82,82,0.8)'
+                  icon:
+                    - color: white
+                    - animation: 'blink 0.5s ease infinite'
+                  name:
+                    - color: white
+              - value: 'off'
+                styles:
+                  card:
+                    - background: '#2d3748'
+                  icon:
+                    - color: '#666'
+                  name:
+                    - color: '#999'
+          
+          # Communication Status
+          - type: custom:button-card
+            name: Comm
+            icon: mdi:lan-connect
+            show_state: false
+            styles:
+              card:
+                - height: 100px
+                - border-radius: 15px
+                - background: 'linear-gradient(135deg, #FFD93D 0%, #F6A623 100%)'
+                - box-shadow: '0 0 15px rgba(255,217,61,0.4)'
+              icon:
+                - width: 50px
+                - color: white
+                - animation: 'pulse 2s ease infinite'
+              name:
+                - font-size: 16px
+                - color: white
+
+      # Temperature Display - Large & Beautiful
+      - type: custom:layout-card
+        layout_type: custom:grid-layout
+        layout:
+          grid-template-columns: 1fr 1fr 1fr
+          grid-gap: 15px
+        cards:
+          # Inlet Temperature
+          - type: custom:button-card
+            entity: sensor.cx_water_inlet_temperature
+            name: Water Inlet
+            show_state: false
+            styles:
+              card:
+                - background: 'linear-gradient(135deg, #4ECDC4 0%, #3AAFA9 100%)'
+                - height: 180px
+                - border-radius: 20px
+                - padding: 20px
+                - box-shadow: '0 6px 20px rgba(0,0,0,0.2)'
+              name:
+                - color: rgba(255,255,255,0.8)
+                - font-size: 16px
+                - font-weight: 300
+            custom_fields:
+              temp: |
+                [[[ 
+                  return `<div style="color: white;">
+                    <div style="font-size: 64px; font-weight: bold; line-height: 1;">
+                      ${entity.state}
+                    </div>
+                    <div style="font-size: 32px; opacity: 0.9;">°C</div>
+                  </div>`;
+                ]]]
+              icon: |
+                <ha-icon icon="mdi:water-arrow-down" style="color: rgba(255,255,255,0.5); width: 40px; height: 40px;"></ha-icon>
+          
+          # Outlet Temperature
+          - type: custom:button-card
+            entity: sensor.cx_water_outlet_temperature
+            name: Water Outlet
+            show_state: false
+            styles:
+              card:
+                - background: 'linear-gradient(135deg, #FF6B6B 0%, #EE5A6F 100%)'
+                - height: 180px
+                - border-radius: 20px
+                - padding: 20px
+                - box-shadow: '0 6px 20px rgba(0,0,0,0.2)'
+              name:
+                - color: rgba(255,255,255,0.8)
+                - font-size: 16px
+                - font-weight: 300
+            custom_fields:
+              temp: |
+                [[[ 
+                  return `<div style="color: white;">
+                    <div style="font-size: 64px; font-weight: bold; line-height: 1;">
+                      ${entity.state}
+                    </div>
+                    <div style="font-size: 32px; opacity: 0.9;">°C</div>
+                  </div>`;
+                ]]]
+              icon: |
+                <ha-icon icon="mdi:water-arrow-up" style="color: rgba(255,255,255,0.5); width: 40px; height: 40px;"></ha-icon>
+          
+          # DHW Temperature
+          - type: custom:button-card
+            entity: sensor.cx_dhw_setpoint
+            name: DHW Setpoint
+            show_state: false
+            styles:
+              card:
+                - background: 'linear-gradient(135deg, #FFD93D 0%, #FFC93D 100%)'
+                - height: 180px
+                - border-radius: 20px
+                - padding: 20px
+                - box-shadow: '0 6px 20px rgba(0,0,0,0.2)'
+              name:
+                - color: rgba(0,0,0,0.7)
+                - font-size: 16px
+                - font-weight: 300
+            custom_fields:
+              temp: |
+                [[[ 
+                  return `<div style="color: rgba(0,0,0,0.9);">
+                    <div style="font-size: 64px; font-weight: bold; line-height: 1;">
+                      ${entity.state}
+                    </div>
+                    <div style="font-size: 32px; opacity: 0.7;">°C</div>
+                  </div>`;
+                ]]]
+              icon: |
+                <ha-icon icon="mdi:water-boiler" style="color: rgba(0,0,0,0.3); width: 40px; height: 40px;"></ha-icon>
+
+      # Performance Metrics Card
+      - type: custom:button-card
+        name: " "
+        styles:
+          card:
+            - background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+            - border-radius: 20px
+            - padding: 25px
+            - box-shadow: '0 10px 30px rgba(0,0,0,0.3)'
+        custom_fields:
+          metrics: |
+            <div style="color: white;">
+              <h2 style="margin: 0 0 20px 0; font-weight: 300;">⚡ Performance Metrics</h2>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 20px;">
+                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px;">
+                  <div style="font-size: 14px; opacity: 0.8;">Current Power</div>
+                  <div style="font-size: 32px; font-weight: bold;">${states['sensor.cx_current_power'].state}W</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px;">
+                  <div style="font-size: 14px; opacity: 0.8;">Thermal Output</div>
+                  <div style="font-size: 32px; font-weight: bold;">${states['sensor.cx_thermal_power_output'].state}kW</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px;">
+                  <div style="font-size: 14px; opacity: 0.8;">Flow Rate</div>
+                  <div style="font-size: 32px; font-weight: bold;">${states['sensor.cx_flow_rate'].state}L/M</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px;">
+                  <div style="font-size: 14px; opacity: 0.8;">Cost/Hour</div>
+                  <div style="font-size: 32px; font-weight: bold;">$${states['sensor.cx_current_operating_cost'].state}</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px;">
+                  <div style="font-size: 14px; opacity: 0.8;">Compressor</div>
+                  <div style="font-size: 32px; font-weight: bold;">${states['sensor.cx_compressor_speed'].state}%</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px;">
+                  <div style="font-size: 14px; opacity: 0.8;">Fan Speed</div>
+                  <div style="font-size: 32px; font-weight: bold;">${states['sensor.cx_fan_speed'].state}%</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px;">
+                  <div style="font-size: 14px; opacity: 0.8;">Ambient</div>
+                  <div style="font-size: 32px; font-weight: bold;">${states['sensor.cx_ambient_temperature'].state}°C</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px;">
+                  <div style="font-size: 14px; opacity: 0.8;">ΔT</div>
+                  <div style="font-size: 32px; font-weight: bold;">${states['sensor.cx_water_temperature_delta'].state}°C</div>
+                </div>
+              </div>
+            </div>
+
+      # COP History Graph
+      - type: custom:apexcharts-card
+        header:
+          show: true
+          title: "📊 COP Performance (24 Hours)"
+          show_states: false
+        graph_span: 24h
+        span:
+          end: minute
+        all_series_config:
+          stroke_width: 3
+          type: line
+          curve: smooth
+        series:
+          - entity: sensor.cx_cop
+            name: COP
+            color: '#51CF66'
+            show:
+              legend_value: true
+        yaxis:
+          - min: 0
+            max: 6
+            decimals: 1
+
+      # Quick Actions
+      - type: horizontal-stack
+        cards:
+          - type: custom:button-card
+            name: ECO MODE
+            icon: mdi:leaf
+            tap_action:
+              action: call-service
+              service: script.cx_eco_mode
+            styles:
+              card:
+                - background: 'linear-gradient(135deg, #51CF66 0%, #37B24D 100%)'
+                - height: 100px
+                - border-radius: 15px
+              name:
+                - color: white
+                - font-size: 18px
+              icon:
+                - color: white
+                - width: 40px
+          
+          - type: custom:button-card
+            name: COMFORT
+            icon: mdi:home-thermometer
+            tap_action:
+              action: call-service
+              service: script.cx_comfort_mode
+            styles:
+              card:
+                - background: 'linear-gradient(135deg, #FFD93D 0%, #FAB005 100%)'
+                - height: 100px
+                - border-radius: 15px
+              name:
+                - color: white
+                - font-size: 18px
+              icon:
+                - color: white
+                - width: 40px
+          
+          - type: custom:button-card
+            name: BOOST
+            icon: mdi:fire-alert
+            tap_action:
+              action: call-service
+              service: script.cx_boost_mode
+            styles:
+              card:
+                - background: 'linear-gradient(135deg, #FF6B6B 0%, #FA5252 100%)'
+                - height: 100px
+                - border-radius: 15px
+              name:
+                - color: white
+                - font-size: 18px
+              icon:
+                - color: white
+                - width: 40px
+          
+          - type: custom:button-card
+            entity: switch.cx_silent_mode_control
+            name: SILENT
+            icon: mdi:volume-off
+            tap_action:
+              action: toggle
+            styles:
+              card:
+                - height: 100px
+                - border-radius: 15px
+              name:
+                - font-size: 18px
+              icon:
+                - width: 40px
+            state:
+              - value: 'on'
+                styles:
+                  card:
+                    - background: 'linear-gradient(135deg, #4ECDC4 0%, #1A535C 100%)'
+                    - box-shadow: '0 0 20px rgba(78,205,196,0.5)'
+                  name:
+                    - color: white
+                  icon:
+                    - color: white
+              - value: 'off'
+                styles:
+                  card:
+                    - background: '#2d3748'
+                  name:
+                    - color: '#999'
+                  icon:
+                    - color: '#666'
+
+  # ========================================================================
+  # TEMPERATURE CONTROL VIEW
+  # ========================================================================
+  - title: Control
+    path: control
+    icon: mdi:thermostat
+    cards:
+      # Heating Control
+      - type: thermostat
+        entity: climate.cx_climate_control
+        name: Heating/Cooling Control
+        features:
+          - type: climate-hvac-modes
+            hvac_modes:
+              - 'off'
+              - heat
+              - cool
+              - auto
+
+      # Temperature Setpoint Sliders
+      - type: entities
+        title: Temperature Setpoints
+        show_header_toggle: false
+        entities:
+          - entity: input_number.cx_heating_setpoint
+            name: Heating Target
+            icon: mdi:fire
+          - entity: input_number.cx_cooling_setpoint
+            name: Cooling Target
+            icon: mdi:snowflake
+          - entity: input_number.cx_dhw_setpoint
+            name: DHW Target
+            icon: mdi:water-boiler
+
+      # Mode Selection Buttons (matching controller symbols)
+      - type: custom:button-card
+        name: " "
+        styles:
+          card:
+            - background: '#2d3748'
+            - padding: 20px
+            - border-radius: 15px
+        custom_fields:
+          modes: |
+            <div style="text-align: center; color: white;">
+              <h2 style="margin-bottom: 30px;">Select Operating Mode</h2>
+              <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
+                <button onclick="hass.callService('script', 'turn_on', {entity_id: 'script.cx_set_cooling'})" 
+                  style="background: linear-gradient(135deg, #4ECDC4 0%, #1A535C 100%); border: none; border-radius: 15px; padding: 30px; cursor: pointer;">
+                  <div style="font-size: 60px;">❄️</div>
+                  <div style="color: white; font-size: 20px; margin-top: 10px;">COOLING</div>
+                </button>
+                <button onclick="hass.callService('script', 'turn_on', {entity_id: 'script.cx_set_heating'})"
+                  style="background: linear-gradient(135deg, #FF6B6B 0%, #C92A2A 100%); border: none; border-radius: 15px; padding: 30px; cursor: pointer;">
+                  <div style="font-size: 60px;">🔥</div>
+                  <div style="color: white; font-size: 20px; margin-top: 10px;">HEATING</div>
+                </button>
+                <button onclick="hass.callService('script', 'turn_on', {entity_id: 'script.cx_set_dhw'})"
+                  style="background: linear-gradient(135deg, #FFD93D 0%, #F6A623 100%); border: none; border-radius: 15px; padding: 30px; cursor: pointer;">
+                  <div style="font-size: 60px;">🚰</div>
+                  <div style="color: white; font-size: 20px; margin-top: 10px;">DHW</div>
+                </button>
+                <button onclick="hass.callService('script', 'turn_on', {entity_id: 'script.cx_set_auto'})"
+                  style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 15px; padding: 30px; cursor: pointer;">
+                  <div style="font-size: 60px;">🔄</div>
+                  <div style="color: white; font-size: 20px; margin-top: 10px;">AUTO</div>
+                </button>
+              </div>
+            </div>
+
+  # ========================================================================
+  # ANALYTICS VIEW
+  # ========================================================================
+  - title: Analytics
+    path: analytics
+    icon: mdi:chart-line
+    cards:
+      # Cost Analysis
+      - type: custom:button-card
+        name: " "
+        styles:
+          card:
+            - background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)'
+            - padding: 25px
+            - border-radius: 20px
+        custom_fields:
+          cost: |
+            <div style="color: white;">
+              <h2 style="margin: 0 0 20px 0;">💰 Cost Analysis</h2>
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px;">
+                  <div style="font-size: 14px;">Current Rate</div>
+                  <div style="font-size: 28px; font-weight: bold;">$${states['sensor.cx_current_electric_rate'].state}/kWh</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px;">
+                  <div style="font-size: 14px;">Cost/Hour</div>
+                  <div style="font-size: 28px; font-weight: bold;">$${states['sensor.cx_current_operating_cost'].state}</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px;">
+                  <div style="font-size: 14px;">Est. Daily</div>
+                  <div style="font-size: 28px; font-weight: bold;">$${states['sensor.cx_estimated_daily_cost'].state}</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px;">
+                  <div style="font-size: 14px;">Savings vs Gas</div>
+                  <div style="font-size: 28px; font-weight: bold; color: #51CF66;">$${states['sensor.cx_savings_vs_gas'].state}/h</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px;">
+                  <div style="font-size: 14px;">Est. Monthly</div>
+                  <div style="font-size: 28px; font-weight: bold;">$${states['sensor.cx_estimated_monthly_cost'].state}</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px;">
+                  <div style="font-size: 14px;">Savings %</div>
+                  <div style="font-size: 28px; font-weight: bold; color: #51CF66;">${states['sensor.cx_savings_percentage'].state}%</div>
+                </div>
+              </div>
+            </div>
+
+      # Temperature History
+      - type: custom:apexcharts-card
+        header:
+          show: true
+          title: "🌡️ Temperature History (24h)"
+        graph_span: 24h
+        series:
+          - entity: sensor.cx_water_inlet_temperature
+            name: Inlet
+            color: '#4ECDC4'
+          - entity: sensor.cx_water_outlet_temperature
+            name: Outlet
+            color: '#FF6B6B'
+          - entity: sensor.cx_ambient_temperature
+            name: Ambient
+            color: '#95E1D3'
+
+      # Power & COP History
+      - type: custom:apexcharts-card
+        header:
+          show: true
+          title: "⚡ Power & COP (24h)"
+        graph_span: 24h
+        apex_config:
+          chart:
+            height: 350
+        yaxis:
+          - id: power
+            decimals: 0
+            apex_config:
+              title:
+                text: Power (W)
+          - id: cop
+            opposite: true
+            decimals: 1
+            apex_config:
+              title:
+                text: COP
+        series:
+          - entity: sensor.cx_current_power
+            name: Power
+            yaxis_id: power
+            color: '#FF6B6B'
+          - entity: sensor.cx_cop
+            name: COP
+            yaxis_id: cop
+            color: '#51CF66'
+
+      # System Statistics
+      - type: entities
+        title: System Statistics
+        entities:
+          - entity: sensor.cx_run_hours
+            name: Total Runtime
+            icon: mdi:clock-outline
+          - entity: sensor.cx_compressor_starts
+            name: Compressor Cycles
+            icon: mdi:counter
+          - entity: sensor.cx_defrost_count
+            name: Defrost Cycles
+            icon: mdi:snowflake-melt
+
+# ========================================================================
+# REQUIRED CUSTOM CARDS (Install via HACS)
+# ========================================================================
+# - custom:button-card
+# - custom:apexcharts-card
+# - custom:layout-card
+#
+# Theme: Use "slate" or any dark theme for best visual effect

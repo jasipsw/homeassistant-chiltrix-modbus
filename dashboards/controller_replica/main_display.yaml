@@ -1,0 +1,450 @@
+# Chiltrix CX50 Controller Display Replica for Home Assistant
+# Accurate recreation of the physical touchscreen controller
+# Compatible with: CX34, CX35, CX50-2
+
+type: vertical-stack
+cards:
+  # ========================================================================
+  # MAIN CONTROLLER DISPLAY - Exact Replica
+  # ========================================================================
+  
+  - type: custom:button-card
+    name: " "
+    styles:
+      card:
+        - background: 'linear-gradient(180deg, #5DCCCC 0%, #4AB8B8 100%)'
+        - border: 8px solid #2A7A7A
+        - border-radius: 20px
+        - padding: 0
+        - box-shadow: '0 8px 16px rgba(0,0,0,0.4), inset 0 2px 4px rgba(255,255,255,0.2)'
+        - height: 600px
+    
+  # Header Bar with WiFi and DateTime
+  - type: horizontal-stack
+    cards:
+      - type: custom:button-card
+        icon: mdi:wifi
+        show_name: false
+        styles:
+          card:
+            - background: 'rgba(93, 204, 204, 0.8)'
+            - border: none
+            - box-shadow: none
+            - height: 50px
+          icon:
+            - color: 'white'
+            - width: 30px
+      
+      - type: markdown
+        content: |
+          <div style="text-align: right; padding: 10px; font-family: monospace; color: #333; font-size: 18px;">
+          {{ now().strftime('%Y/%m/%d %H:%M:%S') }}
+          </div>
+        style: |
+          ha-card {
+            background: rgba(93, 204, 204, 0.8);
+            border: none;
+            box-shadow: none;
+          }
+      
+      - type: custom:button-card
+        entity: binary_sensor.cx_error_status
+        show_name: false
+        icon: mdi:circle
+        styles:
+          card:
+            - background: 'rgba(93, 204, 204, 0.8)'
+            - border: none
+            - box-shadow: none
+            - height: 50px
+          icon:
+            - width: 30px
+        state:
+          - value: 'on'
+            styles:
+              icon:
+                - color: 'red'
+                - animation: 'blink 1s ease infinite'
+          - value: 'off'
+            styles:
+              icon:
+                - color: '#666'
+
+  # Message Bar
+  - type: markdown
+    content: |
+      <div style="background: #000; color: #fff; padding: 8px; text-align: center; font-family: monospace; font-size: 16px;">
+      {% if is_state('binary_sensor.cx_error_status', 'on') %}
+        ⚠️ ERROR CODE: {{ states('sensor.cx_error_code') }}
+      {% elif is_state('binary_sensor.cx_defrost_active', 'on') %}
+        ❄️ DEFROST CYCLE IN PROGRESS
+      {% elif is_state('sensor.cx_operating_state', '1') %}
+        🔥 HEATING MODE ACTIVE
+      {% elif is_state('sensor.cx_operating_state', '2') %}
+        ❄️ COOLING MODE ACTIVE
+      {% elif is_state('sensor.cx_operating_state', '4') %}
+        🚰 DHW MODE ACTIVE
+      {% else %}
+        SYSTEM READY
+      {% endif %}
+      </div>
+    style: |
+      ha-card {
+        border: none;
+        box-shadow: none;
+      }
+
+  # Main Display Container
+  - type: horizontal-stack
+    cards:
+      # Left Button Panel
+      - type: vertical-stack
+        cards:
+          - type: custom:button-card
+            name: Status
+            tap_action:
+              action: navigate
+              navigation_path: /lovelace/chiltrix-status
+            styles:
+              card:
+                - background: 'linear-gradient(135deg, #4a5568 0%, #2d3748 100%)'
+                - height: 90px
+                - margin: 5px
+                - border-radius: 10px
+                - box-shadow: '0 4px 6px rgba(0,0,0,0.3)'
+              name:
+                - color: white
+                - font-size: 20px
+                - font-weight: bold
+          
+          - type: custom:button-card
+            name: Setting
+            tap_action:
+              action: navigate
+              navigation_path: /lovelace/chiltrix-settings
+            styles:
+              card:
+                - background: 'linear-gradient(135deg, #718096 0%, #4a5568 100%)'
+                - height: 90px
+                - margin: 5px
+                - border-radius: 10px
+                - box-shadow: '0 4px 6px rgba(0,0,0,0.3)'
+              name:
+                - color: white
+                - font-size: 20px
+                - font-weight: bold
+          
+          - type: custom:button-card
+            name: Mode
+            tap_action:
+              action: more-info
+            entity: sensor.cx_operating_state
+            styles:
+              card:
+                - background: 'linear-gradient(135deg, #a0aec0 0%, #718096 100%)'
+                - height: 90px
+                - margin: 5px
+                - border-radius: 10px
+                - box-shadow: '0 4px 6px rgba(0,0,0,0.3)'
+              name:
+                - color: white
+                - font-size: 20px
+                - font-weight: bold
+          
+          - type: custom:button-card
+            name: Error
+            tap_action:
+              action: more-info
+            entity: sensor.cx_error_code
+            styles:
+              card:
+                - background: 'linear-gradient(135deg, #4a5568 0%, #2d3748 100%)'
+                - height: 90px
+                - margin: 5px
+                - border-radius: 10px
+                - box-shadow: '0 4px 6px rgba(0,0,0,0.3)'
+              name:
+                - color: white
+                - font-size: 20px
+                - font-weight: bold
+      
+      # Right Display Panel
+      - type: vertical-stack
+        cards:
+          # Temperature Display Row
+          - type: custom:button-card
+            name: " "
+            styles:
+              card:
+                - background: '#4a5a5a'
+                - padding: 10px
+                - border-radius: 10px
+            custom_fields:
+              temps: |
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; text-align: center;">
+                  <div>
+                    <div style="color: #aaa; font-size: 16px; margin-bottom: 5px;">Inlet</div>
+                    <div style="color: #fff; font-size: 36px; font-weight: bold;">
+                      {{ states('sensor.cx_water_inlet_temperature') }}°C
+                    </div>
+                  </div>
+                  <div>
+                    <div style="color: #aaa; font-size: 16px; margin-bottom: 5px;">Outlet</div>
+                    <div style="color: #fff; font-size: 36px; font-weight: bold;">
+                      {{ states('sensor.cx_water_outlet_temperature') }}°C
+                    </div>
+                  </div>
+                  <div>
+                    <div style="color: #aaa; font-size: 16px; margin-bottom: 5px;">DHW</div>
+                    <div style="color: #fff; font-size: 36px; font-weight: bold;">
+                      {{ states('sensor.cx_dhw_setpoint') }}°C
+                    </div>
+                  </div>
+                </div>
+                <div style="text-align: center; margin-top: 10px;">
+                  <span style="color: #aaa; font-size: 16px;">Waterflow</span>
+                  <span style="color: #fff; font-size: 28px; font-weight: bold; margin-left: 20px;">
+                    {{ states('sensor.cx_flow_rate') }} L/M
+                  </span>
+                </div>
+          
+          # Mode Icons Row
+          - type: horizontal-stack
+            cards:
+              - type: custom:button-card
+                entity: binary_sensor.cx_cooling_mode
+                show_name: false
+                icon: mdi:snowflake
+                styles:
+                  card:
+                    - background: '#3a4a4a'
+                    - height: 60px
+                  icon:
+                    - width: 40px
+                state:
+                  - value: 'on'
+                    styles:
+                      icon:
+                        - color: '#4ECDC4'
+                  - value: 'off'
+                    styles:
+                      icon:
+                        - color: '#666'
+              
+              - type: custom:button-card
+                entity: binary_sensor.cx_heating_mode
+                show_name: false
+                icon: mdi:fire
+                styles:
+                  card:
+                    - background: '#3a4a4a'
+                    - height: 60px
+                  icon:
+                    - width: 40px
+                state:
+                  - value: 'on'
+                    styles:
+                      icon:
+                        - color: '#FF6B6B'
+                  - value: 'off'
+                    styles:
+                      icon:
+                        - color: '#666'
+              
+              - type: custom:button-card
+                entity: binary_sensor.cx_dhw_mode
+                show_name: false
+                icon: mdi:water-boiler
+                styles:
+                  card:
+                    - background: '#3a4a4a'
+                    - height: 60px
+                  icon:
+                    - width: 40px
+                state:
+                  - value: 'on'
+                    styles:
+                      icon:
+                        - color: '#FFD93D'
+                  - value: 'off'
+                    styles:
+                      icon:
+                        - color: '#666'
+              
+              - type: custom:button-card
+                show_name: false
+                icon: mdi:fan
+                entity: sensor.cx_fan_speed
+                styles:
+                  card:
+                    - background: '#3a4a4a'
+                    - height: 60px
+                  icon:
+                    - width: 40px
+                    - color: '#95E1D3'
+              
+              - type: custom:button-card
+                entity: binary_sensor.cx_defrost_active
+                show_name: false
+                icon: mdi:snowflake-melt
+                styles:
+                  card:
+                    - background: '#3a4a4a'
+                    - height: 60px
+                  icon:
+                    - width: 40px
+                state:
+                  - value: 'on'
+                    styles:
+                      icon:
+                        - color: '#00D9FF'
+                        - animation: 'pulse 2s ease infinite'
+                  - value: 'off'
+                    styles:
+                      icon:
+                        - color: '#666'
+              
+              - type: custom:button-card
+                entity: switch.cx_power
+                show_name: false
+                icon: mdi:power
+                tap_action:
+                  action: toggle
+                styles:
+                  card:
+                    - background: '#3a4a4a'
+                    - height: 60px
+                  icon:
+                    - width: 40px
+                state:
+                  - value: 'on'
+                    styles:
+                      icon:
+                        - color: '#4CAF50'
+                  - value: 'off'
+                    styles:
+                      icon:
+                        - color: '#666'
+          
+          # Setpoint Display Row
+          - type: custom:button-card
+            name: " "
+            styles:
+              card:
+                - background: '#556a6a'
+                - padding: 10px
+                - border-radius: 10px
+                - border: '2px solid #3a4a4a'
+            custom_fields:
+              setpoints: |
+                <div style="text-align: center; color: #ccc; font-size: 18px; margin-bottom: 10px;">
+                  Set Target Temp
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; text-align: center;">
+                  <div>
+                    <div style="color: #4ECDC4; font-size: 22px; font-weight: bold; margin-bottom: 5px;">COOL</div>
+                    <div style="color: #fff; font-size: 32px; font-weight: bold;">
+                      {{ states('sensor.cx_setpoint_temperature') }}°C
+                    </div>
+                  </div>
+                  <div>
+                    <div style="color: #FF6B6B; font-size: 22px; font-weight: bold; margin-bottom: 5px;">HEAT</div>
+                    <div style="color: #fff; font-size: 32px; font-weight: bold;">
+                      {{ states('sensor.cx_setpoint_temperature') }}°C
+                    </div>
+                  </div>
+                  <div>
+                    <div style="color: #FFD93D; font-size: 22px; font-weight: bold; margin-bottom: 5px;">DHW</div>
+                    <div style="color: #fff; font-size: 32px; font-weight: bold;">
+                      {{ states('sensor.cx_dhw_setpoint') }}°C
+                    </div>
+                  </div>
+                </div>
+          
+          # Error Code Display
+          - type: horizontal-stack
+            cards:
+              - type: custom:button-card
+                name: E1
+                entity: sensor.cx_error_code
+                show_state: false
+                styles:
+                  card:
+                    - background: '#2d3748'
+                    - height: 50px
+                  name:
+                    - color: white
+                    - font-size: 24px
+                    - font-weight: bold
+                state:
+                  - operator: '!='
+                    value: '0'
+                    styles:
+                      card:
+                        - background: '#C53030'
+                        - animation: 'blink 1s ease infinite'
+              
+              - type: custom:button-card
+                name: E2
+                show_state: false
+                styles:
+                  card:
+                    - background: '#2d3748'
+                    - height: 50px
+                  name:
+                    - color: white
+                    - font-size: 24px
+                    - font-weight: bold
+
+# ========================================================================
+# SIMPLIFIED MOBILE VERSION
+# ========================================================================
+
+  - type: markdown
+    content: |
+      ---
+      ### 📱 Mobile Quick View
+    style: |
+      ha-card {
+        background: transparent;
+        box-shadow: none;
+        border: none;
+      }
+
+  - type: glance
+    title: Temperature & Status
+    columns: 3
+    show_state: true
+    style: |
+      ha-card {
+        background: linear-gradient(135deg, #5DCCCC 0%, #4AB8B8 100%);
+        border: 3px solid #2A7A7A;
+      }
+    entities:
+      - entity: sensor.cx_water_inlet_temperature
+        name: Inlet
+      - entity: sensor.cx_water_outlet_temperature
+        name: Outlet
+      - entity: sensor.cx_dhw_setpoint
+        name: DHW
+      - entity: sensor.cx_flow_rate
+        name: Flow
+      - entity: sensor.cx_cop
+        name: COP
+      - entity: sensor.cx_current_power
+        name: Power
+
+# ========================================================================
+# CUSTOM CSS ANIMATIONS
+# ========================================================================
+# Add to your theme or raw config editor:
+#
+# @keyframes blink {
+#   0%, 100% { opacity: 1; }
+#   50% { opacity: 0.3; }
+# }
+#
+# @keyframes pulse {
+#   0%, 100% { transform: scale(1); }
+#   50% { transform: scale(1.1); }
+# }

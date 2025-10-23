@@ -1,0 +1,82 @@
+# Chiltrix Controller - Mode Selection Page
+# Select operating mode and view mode-specific information
+
+type: vertical-stack
+cards:
+  # Header with Back Button
+  - type: horizontal-stack
+    cards:
+      - type: custom:button-card
+        name: ← Back
+        tap_action:
+          action: navigate
+          navigation_path: /lovelace/chiltrix-main
+        styles:
+          card:
+            - background: 'linear-gradient(135deg, #4a5568 0%, #2d3748 100%)'
+            - height: 60px
+          name:
+            - color: white
+            - font-size: 20px
+            - font-weight: bold
+      
+      - type: markdown
+        content: |
+          <div style="text-align: center; padding: 15px; font-size: 24px; font-weight: bold; color: #2d3748;">
+          MODE SELECTION
+          </div>
+        style: |
+          ha-card {
+            background: linear-gradient(135deg, #5DCCCC 0%, #4AB8B8 100%);
+            box-shadow: none;
+            border: none;
+          }
+
+  # Current Mode Display
+  - type: custom:button-card
+    entity: sensor.cx_operating_state
+    name: " "
+    styles:
+      card:
+        - background: '#2d3748'
+        - padding: 20px
+        - border-radius: 15px
+    custom_fields:
+      current_mode: |
+        <div style="text-align: center; color: white;">
+          <div style="font-size: 18px; color: #aaa; margin-bottom: 10px;">CURRENT MODE</div>
+          <div style="font-size: 48px; font-weight: bold; color: #5DCCCC;">
+            {% if is_state('sensor.cx_operating_state', '0') %}
+              OFF
+            {% elif is_state('sensor.cx_operating_state', '1') %}
+              🔥 HEATING
+            {% elif is_state('sensor.cx_operating_state', '2') %}
+              ❄️ COOLING
+            {% elif is_state('sensor.cx_operating_state', '3') %}
+              🔄 AUTO
+            {% elif is_state('sensor.cx_operating_state', '4') %}
+              🚰 DHW
+            {% elif is_state('sensor.cx_operating_state', '5') %}
+              ⚡ DEFROST
+            {% elif is_state('sensor.cx_operating_state', '6') %}
+              ⚠️ ERROR
+            {% else %}
+              UNKNOWN
+            {% endif %}
+          </div>
+        </div>
+
+  # ========================================================================
+  # MODE SELECTION BUTTONS
+  # ========================================================================
+
+  # OFF Mode
+  - type: custom:button-card
+    name: OFF
+    icon: mdi:power-off
+    tap_action:
+      action: call-service
+      service: switch.turn_off
+      service_data:
+        entity_id: switch.cx_power
+    styles
