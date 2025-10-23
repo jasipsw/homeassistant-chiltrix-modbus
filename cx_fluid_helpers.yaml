@@ -1,0 +1,153 @@
+# Fluid Properties Configuration Helpers for Chiltrix Heat Pumps
+# Compatible with: CX34, CX35, CX50-2, and other Chiltrix models
+# Add to configuration.yaml:
+# input_number: !include fluid_helpers.yaml
+#
+# Or create these via UI: Settings -> Devices & Services -> Helpers -> Create Helper -> Number
+
+# ============================================================================
+# FLUID PROPERTY INPUTS
+# ============================================================================
+
+cx_fluid_specific_heat:
+  name: "Chiltrix Fluid Specific Heat Capacity"
+  min: 3.0
+  max: 5.0
+  step: 0.01
+  initial: 3.95  # Default for Environol 1000
+  unit_of_measurement: "kJ/(kg·°C)"
+  mode: box
+  icon: mdi:water-thermometer
+
+cx_fluid_density:
+  name: "Chiltrix Fluid Density"
+  min: 900
+  max: 1100
+  step: 1
+  initial: 1025  # Default for Environol 1000
+  unit_of_measurement: "kg/m³"
+  mode: box
+  icon: mdi:weight
+
+# ============================================================================
+# FLUID TYPE SELECTOR (Optional - for easier configuration)
+# ============================================================================
+# Add to configuration.yaml:
+# input_select: !include fluid_helpers.yaml (select section)
+
+# Uncomment if you want a dropdown selector:
+# cx_fluid_type:
+#   name: "Chiltrix Fluid Type"
+#   options:
+#     - "Water"
+#     - "Environol 1000"
+#     - "30% Glycol"
+#     - "50% Glycol"
+#     - "Custom"
+#   initial: "Environol 1000"
+#   icon: mdi:water
+
+# ============================================================================
+# AUTOMATION TO UPDATE VALUES BASED ON FLUID TYPE SELECTION
+# ============================================================================
+# Add to automations.yaml or create via UI if using the fluid type selector
+
+# - id: cx_fluid_type_change
+#   alias: "Chiltrix - Update Fluid Properties"
+#   description: "Automatically set fluid properties based on selected type"
+#   trigger:
+#     - platform: state
+#       entity_id: input_select.cx_fluid_type
+#   action:
+#     - choose:
+#         # Water
+#         - conditions:
+#             - condition: state
+#               entity_id: input_select.cx_fluid_type
+#               state: "Water"
+#           sequence:
+#             - service: input_number.set_value
+#               target:
+#                 entity_id: input_number.cx_fluid_specific_heat
+#               data:
+#                 value: 4.186
+#             - service: input_number.set_value
+#               target:
+#                 entity_id: input_number.cx_fluid_density
+#               data:
+#                 value: 1000
+#         
+#         # Environol 1000
+#         - conditions:
+#             - condition: state
+#               entity_id: input_select.cx_fluid_type
+#               state: "Environol 1000"
+#           sequence:
+#             - service: input_number.set_value
+#               target:
+#                 entity_id: input_number.cx_fluid_specific_heat
+#               data:
+#                 value: 3.95
+#             - service: input_number.set_value
+#               target:
+#                 entity_id: input_number.cx_fluid_density
+#               data:
+#                 value: 1025
+#         
+#         # 30% Glycol
+#         - conditions:
+#             - condition: state
+#               entity_id: input_select.cx_fluid_type
+#               state: "30% Glycol"
+#           sequence:
+#             - service: input_number.set_value
+#               target:
+#                 entity_id: input_number.cx_fluid_specific_heat
+#               data:
+#                 value: 3.76
+#             - service: input_number.set_value
+#               target:
+#                 entity_id: input_number.cx_fluid_density
+#               data:
+#                 value: 1040
+#         
+#         # 50% Glycol
+#         - conditions:
+#             - condition: state
+#               entity_id: input_select.cx_fluid_type
+#               state: "50% Glycol"
+#           sequence:
+#             - service: input_number.set_value
+#               target:
+#                 entity_id: input_number.cx_fluid_specific_heat
+#               data:
+#                 value: 3.43
+#             - service: input_number.set_value
+#               target:
+#                 entity_id: input_number.cx_fluid_density
+#               data:
+#                 value: 1065
+
+# ============================================================================
+# REFERENCE VALUES FOR COMMON FLUIDS
+# ============================================================================
+# Use these values when configuring manually:
+#
+# Water (Pure):
+#   Specific Heat: 4.186 kJ/(kg·°C)
+#   Density: 1000 kg/m³
+#
+# Environol 1000 (Heat Transfer Fluid):
+#   Specific Heat: 3.95 kJ/(kg·°C)
+#   Density: 1025 kg/m³
+#   Temperature Range: -40°C to 120°C
+#
+# Water/Glycol Mixtures:
+#   10% Glycol: Cp=4.10, ρ=1015 kg/m³
+#   20% Glycol: Cp=3.93, ρ=1027 kg/m³
+#   30% Glycol: Cp=3.76, ρ=1040 kg/m³
+#   40% Glycol: Cp=3.60, ρ=1052 kg/m³
+#   50% Glycol: Cp=3.43, ρ=1065 kg/m³
+#
+# Values are approximate and vary with temperature.
+# For most accurate results, use values at your typical operating temperature.

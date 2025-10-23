@@ -1,0 +1,254 @@
+# Energy Cost Configuration Helpers for Chiltrix Heat Pumps
+# Compatible with: CX34, CX35, CX50-2, and other Chiltrix models
+# Add to configuration.yaml:
+# input_number: !include cost_helpers.yaml
+# input_select: !include cost_helpers.yaml
+# input_boolean: !include cost_helpers.yaml
+#
+# Or create these via UI: Settings -> Devices & Services -> Helpers
+
+# ============================================================================
+# ELECTRICITY RATE CONFIGURATION
+# ============================================================================
+
+# Simple flat rate (if not using time-of-use)
+cx_electric_rate_flat:
+  name: "Electricity Rate (Flat)"
+  min: 0.00
+  max: 1.00
+  step: 0.001
+  initial: 0.12  # Default: $0.12/kWh (adjust for your area)
+  unit_of_measurement: "$/kWh"
+  mode: box
+  icon: mdi:currency-usd
+
+# Time-of-Use (TOU) Rates
+cx_electric_rate_peak:
+  name: "Electricity Rate (Peak)"
+  min: 0.00
+  max: 1.00
+  step: 0.001
+  initial: 0.18  # Default: $0.18/kWh during peak hours
+  unit_of_measurement: "$/kWh"
+  mode: box
+  icon: mdi:currency-usd
+
+cx_electric_rate_mid_peak:
+  name: "Electricity Rate (Mid-Peak)"
+  min: 0.00
+  max: 1.00
+  step: 0.001
+  initial: 0.14  # Default: $0.14/kWh during mid-peak hours
+  unit_of_measurement: "$/kWh"
+  mode: box
+  icon: mdi:currency-usd
+
+cx_electric_rate_off_peak:
+  name: "Electricity Rate (Off-Peak)"
+  min: 0.00
+  max: 1.00
+  step: 0.001
+  initial: 0.08  # Default: $0.08/kWh during off-peak hours
+  unit_of_measurement: "$/kWh"
+  mode: box
+  icon: mdi:currency-usd
+
+# ============================================================================
+# TIME-OF-USE SCHEDULE CONFIGURATION
+# ============================================================================
+
+# Peak hours start time
+cx_peak_start_hour:
+  name: "Peak Hours Start"
+  min: 0
+  max: 23
+  step: 1
+  initial: 16  # Default: 4 PM
+  unit_of_measurement: "hour"
+  mode: slider
+  icon: mdi:clock-start
+
+# Peak hours end time
+cx_peak_end_hour:
+  name: "Peak Hours End"
+  min: 0
+  max: 23
+  step: 1
+  initial: 21  # Default: 9 PM
+  unit_of_measurement: "hour"
+  mode: slider
+  icon: mdi:clock-end
+
+# Mid-peak morning start
+cx_mid_peak_morning_start:
+  name: "Mid-Peak Morning Start"
+  min: 0
+  max: 23
+  step: 1
+  initial: 7  # Default: 7 AM
+  unit_of_measurement: "hour"
+  mode: slider
+  icon: mdi:clock-start
+
+# Mid-peak morning end
+cx_mid_peak_morning_end:
+  name: "Mid-Peak Morning End"
+  min: 0
+  max: 23
+  step: 1
+  initial: 11  # Default: 11 AM
+  unit_of_measurement: "hour"
+  mode: slider
+  icon: mdi:clock-end
+
+# Mid-peak evening start
+cx_mid_peak_evening_start:
+  name: "Mid-Peak Evening Start"
+  min: 0
+  max: 23
+  step: 1
+  initial: 12  # Default: 12 PM
+  unit_of_measurement: "hour"
+  mode: slider
+  icon: mdi:clock-start
+
+# Mid-peak evening end
+cx_mid_peak_evening_end:
+  name: "Mid-Peak Evening End"
+  min: 0
+  max: 23
+  step: 1
+  initial: 16  # Default: 4 PM
+  unit_of_measurement: "hour"
+  mode: slider
+  icon: mdi:clock-end
+
+# ============================================================================
+# ALTERNATIVE FUEL COST COMPARISON (Optional)
+# ============================================================================
+
+cx_gas_rate:
+  name: "Natural Gas Rate"
+  min: 0.00
+  max: 5.00
+  step: 0.01
+  initial: 1.20  # Default: $1.20/therm
+  unit_of_measurement: "$/therm"
+  mode: box
+  icon: mdi:fire
+
+cx_oil_rate:
+  name: "Heating Oil Rate"
+  min: 0.00
+  max: 10.00
+  step: 0.01
+  initial: 3.50  # Default: $3.50/gallon
+  unit_of_measurement: "$/gal"
+  mode: box
+  icon: mdi:oil
+
+cx_propane_rate:
+  name: "Propane Rate"
+  min: 0.00
+  max: 10.00
+  step: 0.01
+  initial: 2.80  # Default: $2.80/gallon
+  unit_of_measurement: "$/gal"
+  mode: box
+  icon: mdi:fire
+
+# Gas furnace efficiency (for comparison calculations)
+cx_gas_furnace_efficiency:
+  name: "Gas Furnace Efficiency"
+  min: 0.70
+  max: 0.98
+  step: 0.01
+  initial: 0.90  # Default: 90% efficient
+  unit_of_measurement: ""
+  mode: slider
+  icon: mdi:percent
+
+# ============================================================================
+# SELECT HELPERS
+# ============================================================================
+# Add these to configuration.yaml under input_select:
+
+# Rate structure selector
+cx_rate_structure:
+  name: "Electricity Rate Structure"
+  options:
+    - "Flat Rate"
+    - "Time of Use (TOU)"
+    - "Time of Use (Weekday/Weekend)"
+  initial: "Flat Rate"
+  icon: mdi:cash-clock
+
+# Weekend TOU behavior
+cx_weekend_rate_type:
+  name: "Weekend Rate Type"
+  options:
+    - "Same as Weekday"
+    - "Always Off-Peak"
+    - "Custom Schedule"
+  initial: "Always Off-Peak"
+  icon: mdi:calendar-weekend
+
+# Comparison fuel type
+cx_comparison_fuel:
+  name: "Compare Heat Pump To"
+  options:
+    - "None"
+    - "Natural Gas"
+    - "Heating Oil"
+    - "Propane"
+    - "Electric Resistance"
+  initial: "Natural Gas"
+  icon: mdi:fire-circle
+
+# ============================================================================
+# BOOLEAN HELPERS (Optional Features)
+# ============================================================================
+# Add these to configuration.yaml under input_boolean:
+
+cx_enable_tou_rates:
+  name: "Enable Time-of-Use Rates"
+  initial: false
+  icon: mdi:clock-alert
+
+cx_enable_seasonal_rates:
+  name: "Enable Seasonal Rate Adjustments"
+  initial: false
+  icon: mdi:weather-partly-snowy-rainy
+
+cx_track_savings:
+  name: "Track Savings vs Alternative Fuel"
+  initial: true
+  icon: mdi:piggy-bank
+
+# ============================================================================
+# REFERENCE VALUES FOR COMMON UTILITIES
+# ============================================================================
+# Typical electricity rates by region (2024-2025):
+#
+# United States (average):
+#   - Residential: $0.12 - $0.18/kWh
+#   - Peak TOU: $0.18 - $0.35/kWh
+#   - Off-Peak TOU: $0.08 - $0.12/kWh
+#
+# By State (examples):
+#   - California: $0.25 - $0.40/kWh (TOU common)
+#   - Texas: $0.10 - $0.15/kWh
+#   - New York: $0.18 - $0.25/kWh
+#   - Massachusetts: $0.22 - $0.28/kWh
+#   - Hawaii: $0.30 - $0.40/kWh (highest in US)
+#
+# Fuel comparison (typical prices):
+#   - Natural Gas: $1.00 - $1.50/therm (100,000 BTU)
+#   - Heating Oil: $3.00 - $4.50/gallon (138,500 BTU/gal)
+#   - Propane: $2.50 - $3.50/gallon (91,500 BTU/gal)
+#
+# Conversion factors:
+#   - 1 kWh = 3,412 BTU
+#   - 1 therm = 100,000 BTU
+#   - Heating oil: ~138,500 BTU/gallon
+#   - Propane: ~91,500 BTU/gallon

@@ -1,0 +1,352 @@
+# COP (Coefficient of Performance) Calculation Templates for Chiltrix Heat Pumps
+# Compatible with: CX34, CX35, CX50-2, and other Chiltrix models
+# Add to configuration.yaml:
+# template: !include cop_sensors.yaml
+#
+# Or merge into existing template section
+
+# ============================================================================
+# FLUID PROPERTIES CONFIGURATION
+# ============================================================================
+# These input_number helpers allow you to configure fluid properties
+# Add to configuration.yaml or create via UI (Settings -> Devices & Services -> Helpers)
+
+# Uncomment and add to configuration.yaml:
+# input_number:
+#   cx_fluid_specific_heat:
+#     name: "Chiltrix Fluid Specific Heat Capacity"
+#     min: 3.0
+#     max: 5.0
+#     step: 0.01
+#     unit_of_measurement: "kJ/(kg·°C)"
+#     mode: box
+#     icon: mdi:water-thermometer
+#   
+#   cx_fluid_density:
+#     name: "Chiltrix Fluid Density"
+#     min: 900
+#     max: 1100
+#     step: 1
+#     unit_of_measurement: "kg/m³"
+#     mode: box
+#     icon: mdi:weight
+#
+# Default values for common fluids:
+# - Water: specific_heat = 4.186 kJ/(kg·°C), density = 1000 kg/m³
+# - Environol 1000: specific_heat = 3.95 kJ/(kg·°C), density = 1025 kg/m³
+# - 30% Glycol: specific_heat = 3.76 kJ/(kg·°C), density = 1040 kg/m³
+# - 50% Glycol: specific_heat = 3.43 kJ/(kg·°C), density = 1065 kg/m³
+
+# ============================================================================
+# TEMPLATE SENSORS
+# ============================================================================
+
+- sensor:
+    # ------------------------------------------------------------------------
+    # Fluid Properties (with defaults if helpers not configured)
+    # ------------------------------------------------------------------------
+    
+    - name: "CX Fluid Specific Heat"
+      unique_id: cx_fluid_specific_heat_value
+      state: >
+        {% if states('input_number.cx_fluid_specific_heat') not in ['unknown', 'unavailable'] %}
+          {{ states('input_number.cx_fluid_specific_heat') | float }}
+        {% else %}
+          3.95
+        {% endif %}
+      unit_of_measurement: "kJ/(kg·°C)"
+      icon: mdi:water-thermometer
+    
+    - name: "CX Fluid Density"
+      unique_id: cx_fluid_density_value
+      state: >
+        {% if states('input_number.cx_fluid_density') not in ['unknown', 'unavailable'] %}
+          {{ states('input_number.cx_fluid_density') | float }}
+        {% else %}
+          1025
+        {% endif %}
+      unit_of_measurement: "kg/m³"
+      icon: mdi:weight
+    
+    # ------------------------------------------------------------------------
+    # Temperature Delta (ΔT)
+    # ------------------------------------------------------------------------
+    
+    - name: "CX Water Temperature Delta"
+      unique_id: cx_water_temp_delta
+      state: >
+        {% set inlet = states('sensor.cx_water_inlet_temperature') | float(0) %}
+        {% set outlet = states('sensor.cx_water_outlet_temperature') | float(0) %}
+        {{ (outlet - inlet) | round(2) }}
+      unit_of_measurement: "°C"
+      device_class: temperature
+      state_class: measurement
+      icon: mdi:delta
+    
+    # ------------------------------------------------------------------------
+    # Thermal Power Output (Q)
+    # Formula: Q = ṁ × Cp × ΔT
+    # Where: ṁ = mass flow rate (kg/s) = flow_rate (L/min) × density (kg/L) / 60
+    #        Cp = specific heat capacity (kJ/(kg·°C))
+    #        ΔT = temperature difference (°C)
+    # Result in kW
+    # ------------------------------------------------------------------------
+    
+    - name: "CX Thermal Power Output"
+      unique_id: cx_thermal_power_output
+      state: >
+        {% set flow_rate = states('sensor.cx_flow_rate') | float(0) %}
+        {% set delta_t = states('sensor.cx_water_temperature_delta') | float(0) %}
+        {% set density = states('sensor.cx_fluid_density') | float(1025) %}
+        {% set specific_heat = states('sensor.cx_fluid_specific_heat') | float(3.95) %}
+        
+        {% if flow_rate > 0 and delta_t != 0 %}
+          {# Convert flow from L/min to kg/s #}
+          {% set mass_flow = (flow_rate * density / 1000) / 60 %}
+          {# Calculate thermal power in kW #}
+          {% set thermal_power = mass_flow * specific_heat * delta_t %}
+          {{ thermal_power | round(2) }}
+        {% else %}
+          0
+        {% endif %}
+      unit_of_measurement: "kW"
+      device_class: power
+      state_class: measurement
+      icon: mdi:fire
+    
+    # ------------------------------------------------------------------------
+    # COP Calculation (Overall)
+    # Formula: COP = Thermal Power Output / Electrical Power Input
+    # ------------------------------------------------------------------------
+    
+    - name: "CX COP"
+      unique_id: cx_cop
+      state: >
+        {% set thermal = states('sensor.cx_thermal_power_output') | float(0) %}
+        {% set electric = states('sensor.cx_current_power') | float(0) %}
+        
+        {% if electric > 100 and thermal != 0 %}
+          {# Convert electric power from W to kW #}
+          {% set electric_kw = electric / 1000 %}
+          {% set cop = thermal / electric_kw %}
+          {# Sanity check: COP should be between 0.5 and 8.0 #}
+          {% if cop > 0.5 and cop < 8.0 %}
+            {{ cop | round(2) }}
+          {% else %}
+            unavailable
+          {% endif %}
+        {% else %}
+          unavailable
+        {% endif %}
+      state_class: measurement
+      icon: mdi:gauge
+    
+    # ------------------------------------------------------------------------
+    # COP by Operating Mode
+    # ------------------------------------------------------------------------
+    
+    - name: "CX COP Heating Mode"
+      unique_id: cx_cop_heating
+      state: >
+        {% set operating_state = states('sensor.cx_operating_state') | int(0) %}
+        {% set cop = states('sensor.cx_cop') %}
+        
+        {# Only show COP when in heating mode (1) #}
+        {% if operating_state == 1 and cop not in ['unavailable', 'unknown'] %}
+          {{ cop }}
+        {% else %}
+          unavailable
+        {% endif %}
+      state_class: measurement
+      icon: mdi:fire
+    
+    - name: "CX COP Cooling Mode"
+      unique_id: cx_cop_cooling
+      state: >
+        {% set operating_state = states('sensor.cx_operating_state') | int(0) %}
+        {% set cop = states('sensor.cx_cop') %}
+        
+        {# Only show COP when in cooling mode (2) #}
+        {% if operating_state == 2 and cop not in ['unavailable', 'unknown'] %}
+          {{ cop }}
+        {% else %}
+          unavailable
+        {% endif %}
+      state_class: measurement
+      icon: mdi:snowflake
+    
+    - name: "CX COP DHW Mode"
+      unique_id: cx_cop_dhw
+      state: >
+        {% set operating_state = states('sensor.cx_operating_state') | int(0) %}
+        {% set cop = states('sensor.cx_cop') %}
+        
+        {# Only show COP when in DHW mode (4) #}
+        {% if operating_state == 4 and cop not in ['unavailable', 'unknown'] %}
+          {{ cop }}
+        {% else %}
+          unavailable
+        {% endif %}
+      state_class: measurement
+      icon: mdi:water-boiler
+    
+    # ------------------------------------------------------------------------
+    # COP with DHW Priority Status
+    # ------------------------------------------------------------------------
+    
+    - name: "CX COP Heating with DHW"
+      unique_id: cx_cop_heating_dhw
+      state: >
+        {% set operating_state = states('sensor.cx_operating_state') | int(0) %}
+        {% set dhw_priority = states('binary_sensor.cx_dhw_priority') %}
+        {% set cop = states('sensor.cx_cop') %}
+        
+        {# Show COP when in heating mode AND DHW priority is active #}
+        {% if operating_state == 1 and dhw_priority == 'on' and cop not in ['unavailable', 'unknown'] %}
+          {{ cop }}
+        {% else %}
+          unavailable
+        {% endif %}
+      state_class: measurement
+      icon: mdi:fire-circle
+    
+    - name: "CX COP Heating without DHW"
+      unique_id: cx_cop_heating_no_dhw
+      state: >
+        {% set operating_state = states('sensor.cx_operating_state') | int(0) %}
+        {% set dhw_priority = states('binary_sensor.cx_dhw_priority') %}
+        {% set cop = states('sensor.cx_cop') %}
+        
+        {# Show COP when in heating mode AND DHW priority is NOT active #}
+        {% if operating_state == 1 and dhw_priority == 'off' and cop not in ['unavailable', 'unknown'] %}
+          {{ cop }}
+        {% else %}
+          unavailable
+        {% endif %}
+      state_class: measurement
+      icon: mdi:fire
+    
+    - name: "CX COP Cooling with DHW"
+      unique_id: cx_cop_cooling_dhw
+      state: >
+        {% set operating_state = states('sensor.cx_operating_state') | int(0) %}
+        {% set dhw_priority = states('binary_sensor.cx_dhw_priority') %}
+        {% set cop = states('sensor.cx_cop') %}
+        
+        {# Show COP when in cooling mode AND DHW priority is active #}
+        {% if operating_state == 2 and dhw_priority == 'on' and cop not in ['unavailable', 'unknown'] %}
+          {{ cop }}
+        {% else %}
+          unavailable
+        {% endif %}
+      state_class: measurement
+      icon: mdi:snowflake-thermometer
+    
+    - name: "CX COP Cooling without DHW"
+      unique_id: cx_cop_cooling_no_dhw
+      state: >
+        {% set operating_state = states('sensor.cx_operating_state') | int(0) %}
+        {% set dhw_priority = states('binary_sensor.cx_dhw_priority') %}
+        {% set cop = states('sensor.cx_cop') %}
+        
+        {# Show COP when in cooling mode AND DHW priority is NOT active #}
+        {% if operating_state == 2 and dhw_priority == 'off' and cop not in ['unavailable', 'unknown'] %}
+          {{ cop }}
+        {% else %}
+          unavailable
+        {% endif %}
+      state_class: measurement
+      icon: mdi:snowflake
+    
+    # ------------------------------------------------------------------------
+    # Average COP Statistics (using statistics integration)
+    # These calculate running averages over different time periods
+    # ------------------------------------------------------------------------
+    
+    - name: "CX COP Average Hourly"
+      unique_id: cx_cop_avg_hourly
+      state: >
+        {{ state_attr('sensor.cx_cop', 'mean') | round(2) if state_attr('sensor.cx_cop', 'mean') else 'unavailable' }}
+      unit_of_measurement: ""
+      icon: mdi:chart-line
+    
+    - name: "CX COP Average Daily"
+      unique_id: cx_cop_avg_daily
+      state: >
+        {{ states('sensor.cx_cop_statistics_mean') | round(2) if states('sensor.cx_cop_statistics_mean') not in ['unknown', 'unavailable'] else 'unavailable' }}
+      unit_of_measurement: ""
+      icon: mdi:chart-bell-curve
+    
+    # ------------------------------------------------------------------------
+    # Energy Calculations
+    # ------------------------------------------------------------------------
+    
+    - name: "CX Thermal Energy Output"
+      unique_id: cx_thermal_energy_output
+      state: >
+        {% set thermal_power = states('sensor.cx_thermal_power_output') | float(0) %}
+        {{ thermal_power }}
+      unit_of_measurement: "kW"
+      device_class: power
+      state_class: measurement
+      icon: mdi:lightning-bolt-circle
+    
+    - name: "CX Electrical Energy Input"
+      unique_id: cx_electrical_energy_input
+      state: >
+        {% set electric_power = states('sensor.cx_current_power') | float(0) / 1000 %}
+        {{ electric_power | round(3) }}
+      unit_of_measurement: "kW"
+      device_class: power
+      state_class: measurement
+      icon: mdi:transmission-tower
+    
+    # ------------------------------------------------------------------------
+    # Efficiency Rating (Human-readable)
+    # ------------------------------------------------------------------------
+    
+    - name: "CX Efficiency Rating"
+      unique_id: cx_efficiency_rating
+      state: >
+        {% set cop = states('sensor.cx_cop') | float(0) %}
+        {% if cop >= 4.5 %}
+          Excellent
+        {% elif cop >= 3.5 %}
+          Very Good
+        {% elif cop >= 2.5 %}
+          Good
+        {% elif cop >= 1.5 %}
+          Fair
+        {% elif cop > 0 %}
+          Poor
+        {% else %}
+          Unknown
+        {% endif %}
+      icon: >
+        {% set cop = states('sensor.cx_cop') | float(0) %}
+        {% if cop >= 4.5 %}
+          mdi:star-circle
+        {% elif cop >= 3.5 %}
+          mdi:star
+        {% elif cop >= 2.5 %}
+          mdi:thumb-up
+        {% elif cop >= 1.5 %}
+          mdi:minus-circle
+        {% else %}
+          mdi:alert-circle
+        {% endif %}
+
+# ============================================================================
+# STATISTICS SENSORS (for long-term averages)
+# ============================================================================
+# Add to configuration.yaml to track COP statistics over time:
+#
+# sensor:
+#   - platform: statistics
+#     name: "CX COP Statistics"
+#     entity_id: sensor.cx_cop
+#     state_characteristic: mean
+#     max_age:
+#       hours: 24
+#     sampling_size: 1000
+#     precision: 2

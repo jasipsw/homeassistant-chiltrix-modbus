@@ -1,0 +1,151 @@
+# Customize entity appearance in Home Assistant
+# Compatible with: CX34, CX35, CX50-2, and other Chiltrix models
+# Add to configuration.yaml:
+# homeassistant:
+#   customize: !include customize.yaml
+
+# Temperature Sensors
+sensor.cx_water_inlet_temperature:
+  friendly_name: "Water In"
+  icon: mdi:thermometer-water
+
+sensor.cx_water_outlet_temperature:
+  friendly_name: "Water Out"
+  icon: mdi:thermometer-water
+
+sensor.cx_ambient_temperature:
+  friendly_name: "Outdoor Temp"
+  icon: mdi:thermometer
+
+sensor.cx_coil_temperature:
+  friendly_name: "Coil Temp"
+  icon: mdi:thermometer-lines
+
+sensor.cx_discharge_temperature:
+  friendly_name: "Discharge Temp"
+  icon: mdi:thermometer-chevron-up
+
+sensor.cx_suction_temperature:
+  friendly_name: "Suction Temp"
+  icon: mdi:thermometer-chevron-down
+
+sensor.cx_setpoint_temperature:
+  friendly_name: "Target Temp"
+  icon: mdi:target
+
+sensor.cx_dhw_setpoint:
+  friendly_name: "Hot Water Target"
+  icon: mdi:water-boiler
+
+sensor.cx_antifreeze_temperature:
+  friendly_name: "Antifreeze Temp"
+  icon: mdi:snowflake-alert
+
+# Status Sensors
+sensor.cx_operating_state:
+  friendly_name: "Operating Mode"
+  icon: mdi:state-machine
+
+sensor.cx_error_code:
+  friendly_name: "Error Code"
+  icon: mdi:alert-circle-outline
+
+# Performance Sensors
+sensor.cx_current_power:
+  friendly_name: "Power Consumption"
+  icon: mdi:lightning-bolt
+
+sensor.cx_flow_rate:
+  friendly_name: "Water Flow"
+  icon: mdi:waves
+
+sensor.cx_compressor_speed:
+  friendly_name: "Compressor Speed"
+  icon: mdi:speedometer
+
+sensor.cx_fan_speed:
+  friendly_name: "Fan Speed"
+  icon: mdi:fan
+
+sensor.cx_pump_speed:
+  friendly_name: "Pump Speed"
+  icon: mdi:pump
+
+sensor.cx_system_pressure:
+  friendly_name: "System Pressure"
+  icon: mdi:gauge
+
+# Diagnostic Sensors
+sensor.cx_run_hours:
+  friendly_name: "Total Runtime"
+  icon: mdi:clock-outline
+
+sensor.cx_compressor_starts:
+  friendly_name: "Compressor Starts"
+  icon: mdi:counter
+
+sensor.cx_defrost_count:
+  friendly_name: "Defrost Cycles"
+  icon: mdi:snowflake-melt
+
+# Binary Sensors
+binary_sensor.cx_power_status:
+  friendly_name: "Power On"
+  icon: mdi:power
+  device_class: power
+
+binary_sensor.cx_heating_mode:
+  friendly_name: "Heating Active"
+  icon: mdi:fire
+  device_class: heat
+
+binary_sensor.cx_cooling_mode:
+  friendly_name: "Cooling Active"
+  icon: mdi:snowflake
+  device_class: cold
+
+binary_sensor.cx_dhw_mode:
+  friendly_name: "Hot Water Active"
+  icon: mdi:water-boiler
+  device_class: heat
+
+binary_sensor.cx_silent_mode:
+  friendly_name: "Silent Mode"
+  icon: mdi:volume-off
+
+binary_sensor.cx_dhw_priority:
+  friendly_name: "Hot Water Priority"
+  icon: mdi:water-boiler-alert
+
+binary_sensor.cx_defrost_active:
+  friendly_name: "Defrost Active"
+  icon: mdi:snowflake-melt
+  device_class: running
+
+binary_sensor.cx_pump_enabled:
+  friendly_name: "Pump Running"
+  icon: mdi:pump
+  device_class: running
+
+binary_sensor.cx_error_status:
+  friendly_name: "Error Present"
+  icon: mdi:alert
+  device_class: problem
+
+# Switches
+switch.cx_power:
+  friendly_name: "Heat Pump Power"
+  icon: mdi:power
+
+switch.cx_silent_mode_control:
+  friendly_name: "Silent Mode"
+  icon: mdi:volume-off
+
+switch.cx_dhw_priority_control:
+  friendly_name: "Hot Water Priority"
+  icon: mdi:water-boiler-alert
+
+# Climate
+climate.cx_climate_control:
+  friendly_name: "Heat Pump"
+  icon: mdi:heat-pump
