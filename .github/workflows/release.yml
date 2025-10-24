@@ -1,0 +1,93 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Create release archive
+        run: |
+          # Create a clean archive with all necessary files
+          mkdir -p release_package
+          
+          # Copy main files
+          cp install.sh release_package/
+          cp modbus.yaml release_package/
+          cp cop_sensors.yaml release_package/
+          cp cost_sensors.yaml release_package/
+          cp fluid_helpers.yaml release_package/
+          cp cost_helpers.yaml release_package/
+          cp automation_scripts.yaml release_package/
+          
+          # Copy documentation
+          cp README.md release_package/
+          cp QUICK_START.md release_package/
+          cp CHANGELOG.md release_package/
+          cp LICENSE release_package/
+          
+          # Copy dashboards
+          mkdir -p release_package/dashboards
+          cp dashboards/*.yaml release_package/dashboards/ 2>/dev/null || true
+          
+          # Copy examples if they exist
+          if [ -d "examples" ]; then
+            cp -r examples release_package/
+          fi
+          
+          # Create archive
+          cd release_package
+          zip -r ../chiltrix-homeassistant-${{ steps.get_version.outputs.VERSION }}.zip .
+          cd ..
+          
+          # Make install script executable
+          chmod +x release_package/install.sh
+
+      - name: Extract changelog for this version
+        id: changelog
+        run: |
+          # Extract the changelog for this version
+          VERSION=${{ steps.get_version.outputs.VERSION }}
+          
+          # Get changelog content between this version and the previous one
+          CHANGELOG=$(awk "/## \[${VERSION#v}\]/,/## \[/" CHANGELOG.md | sed '$d')
+          
+          # If changelog is empty, use a default message
+          if [ -z "$CHANGELOG" ]; then
+            CHANGELOG="See CHANGELOG.md for details."
+          fi
+          
+          # Save to file (GitHub Actions doesn't handle multiline well in outputs)
+          echo "$CHANGELOG" > release_notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: release_notes.md
+          files: |
+            chiltrix-homeassistant-${{ steps.get_version.outputs.VERSION }}.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-package
+          path: chiltrix-homeassistant-${{ steps.get_version.outputs.VERSION }}.zip
+          retention-days: 90
