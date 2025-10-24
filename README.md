@@ -426,16 +426,8 @@ HACS → Frontend → Search for card name → Install
 - **Custom Cards**: github.com/custom-cards
 - **Chiltrix Manual**: chiltrix.com/support
 
-## 🎉 What Users Are Saying
-
-> "This dashboard is incredible! So much better than squinting at the tiny controller screen. The cost tracking alone has helped me optimize my usage and save $50/month!" - CX50-2 Owner
-
-> "The COP graphs are fascinating. I can actually see how outdoor temperature affects efficiency. This dashboard taught me more about my heat pump than the manual did." - CX34 Owner
-
-> "Love the voice control integration. 'Hey Google, set heat pump to eco mode' before bed is perfect." - Smart Home Enthusiast
-
 ---
 
 **Made with ❤️ for Chiltrix Heat Pump Owners**
 
-Compatible with: CX34, CX35, CX50-2, and other Chiltrix models
+Compatible with: CX50-2, and perhaps other Chiltrix models** like the CX34
