@@ -2,7 +2,7 @@
 
 **Different thanthe Physical Controller** - Modern, informative, and beautiful interface for your Chiltrix heat pump.
 
-## 🎯 Why This Dashboard is Better Than the Controller
+## 🎯 How is this Dashboard is different Than the Controller?
 
 ### Physical Controller Limitations:
 - ❌ Small LCD screen with limited information
