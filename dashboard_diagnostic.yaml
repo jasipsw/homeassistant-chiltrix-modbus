@@ -3,6 +3,60 @@ views:
   - title: Sensor Values
     cards:
       - type: markdown
+        title: "🔍 Temperature Sensors (Modbus)"
+        content: |
+          **Inlet:** {{ states('sensor.cx50_inlet_water_temp_c') }}°C
+          **Outlet:** {{ states('sensor.cx50_outlet_water_temp_c') }}°C
+          **Ambient:** {{ states('sensor.cx50_ambient_temp_c') }}°C
+
+      - type: markdown
+        title: "⚡ Electrical Sensors (Modbus)"
+        content: |
+          **Voltage:** {{ states('sensor.cx50_input_ac_voltage') }}V
+          **Current:** {{ states('sensor.cx50_input_ac_current') }}A
+          **Compressor Frequency:** {{ states('sensor.cx50_compressor_frequency') }}Hz
+
+      - type: markdown
+        title: "💧 Flow Sensors (Modbus)"
+        content: |
+          **Flow Rate:** {{ states('sensor.cx50_pump_flow_lpm') }} L/min
+          **Operating Mode:** {{ states('sensor.cx50_operating_mode') }} (raw)
+
+      - type: markdown
+        title: "🌀 Fan Sensors (Modbus)"
+        content: |
+          **Fan 1 Speed:** {{ states('sensor.cx50_c45_ec_fan_motor_1_speed') }}
+          **Fan 2 Speed:** {{ states('sensor.cx50_c46_ec_fan_motor_2_speed') }}
+
+      - type: markdown
+        title: "🔢 Calculated Template Sensors"
+        content: |
+          **Operating Mode Text:** {{ states('sensor.cx_operating_mode') }}
+          **Temperature Delta:** {{ states('sensor.cx_water_temperature_delta') }}{{ state_attr('sensor.cx_water_temperature_delta', 'unit_of_measurement') }}
+          **Electrical Power Input:** {{ states('sensor.cx_electrical_power_input') }}W ({{ states('sensor.cx_electrical_power_input_kw') }}kW)
+          **Thermal Power Output:** {{ states('sensor.cx_thermal_power_output') }}W ({{ states('sensor.cx_thermal_power_output_kw') }}kW)
+          **COP:** {{ states('sensor.cx_cop') }}
+          **COP Heating:** {{ states('sensor.cx_cop_heating_mode') }}
+          **COP Cooling:** {{ states('sensor.cx_cop_cooling_mode') }}
+          **COP DHW:** {{ states('sensor.cx_cop_dhw_mode') }}
+          **Efficiency Rating:** {{ states('sensor.cx_efficiency_rating') }}
+          **Compressor Speed:** {{ states('sensor.cx_compressor_speed_2') }}%
+          **Fan Speed:** {{ states('sensor.cx_fan_speed_2') }}%
+
+      - type: markdown
+        title: "⚙️ Helper Inputs"
+        content: |
+          **Fluid Density:** {{ states('input_number.cx_fluid_density') }} kg/m³
+          **Fluid Specific Heat:** {{ states('input_number.cx_fluid_specific_heat') }} kJ/(kg·°C)
+
+      - type: markdown
+        title: "📊 Calculated Values (Manual Check)"
+        content: |
+          **Power Calc (V×I):** {{ (states('sensor.cx50_input_ac_voltage')|float * states('sensor.cx50_input_ac_current')|float)|round(0) }}W
+          **Temp Delta Calc:** {{ (states('sensor.cx50_outlet_water_temp_c')|float - states('sensor.cx50_inlet_water_temp_c')|float)|round(2) }}°C
+          **COP Calc:** {{ (states('sensor.cx_thermal_power_output')|float / states('sensor.cx_electrical_power_input')|float)|round(2) if states('sensor.cx_electrical_power_input')|float > 0 else 'N/A' }}
+          **Fan Avg Calc:** {{ ((states('sensor.cx50_c45_ec_fan_motor_1_speed')|float + states('sensor.cx50_c46_ec_fan_motor_2_speed')|float) / 2 / 10)|round(1) }}%
+      - type: markdown
         title: "📊 CX50-2 Modbus Register Map (IOM Reference)"
         content: |
           | Dec | Hex | Type | Sensor Name | Entity ID | Description (IOM) | Value |
@@ -87,57 +141,3 @@ views:
 
           **Legend:** Sens=Sensor (read-only), Bin=Binary Sensor (read-only), Coil=Switch (read/write), Reg=Register (read/write)
 
-      - type: markdown
-        title: "🔍 Temperature Sensors (Modbus)"
-        content: |
-          **Inlet:** {{ states('sensor.cx50_inlet_water_temp_c') }}°C
-          **Outlet:** {{ states('sensor.cx50_outlet_water_temp_c') }}°C
-          **Ambient:** {{ states('sensor.cx50_ambient_temp_c') }}°C
-
-      - type: markdown
-        title: "⚡ Electrical Sensors (Modbus)"
-        content: |
-          **Voltage:** {{ states('sensor.cx50_input_ac_voltage') }}V
-          **Current:** {{ states('sensor.cx50_input_ac_current') }}A
-          **Compressor Frequency:** {{ states('sensor.cx50_compressor_frequency') }}Hz
-
-      - type: markdown
-        title: "💧 Flow Sensors (Modbus)"
-        content: |
-          **Flow Rate:** {{ states('sensor.cx50_pump_flow_lpm') }} L/min
-          **Operating Mode:** {{ states('sensor.cx50_operating_mode') }} (raw)
-
-      - type: markdown
-        title: "🌀 Fan Sensors (Modbus)"
-        content: |
-          **Fan 1 Speed:** {{ states('sensor.cx50_c45_ec_fan_motor_1_speed') }}
-          **Fan 2 Speed:** {{ states('sensor.cx50_c46_ec_fan_motor_2_speed') }}
-
-      - type: markdown
-        title: "🔢 Calculated Template Sensors"
-        content: |
-          **Operating Mode Text:** {{ states('sensor.cx_operating_mode') }}
-          **Temperature Delta:** {{ states('sensor.cx_water_temperature_delta') }}{{ state_attr('sensor.cx_water_temperature_delta', 'unit_of_measurement') }}
-          **Electrical Power Input:** {{ states('sensor.cx_electrical_power_input') }}W ({{ states('sensor.cx_electrical_power_input_kw') }}kW)
-          **Thermal Power Output:** {{ states('sensor.cx_thermal_power_output') }}W ({{ states('sensor.cx_thermal_power_output_kw') }}kW)
-          **COP:** {{ states('sensor.cx_cop') }}
-          **COP Heating:** {{ states('sensor.cx_cop_heating_mode') }}
-          **COP Cooling:** {{ states('sensor.cx_cop_cooling_mode') }}
-          **COP DHW:** {{ states('sensor.cx_cop_dhw_mode') }}
-          **Efficiency Rating:** {{ states('sensor.cx_efficiency_rating') }}
-          **Compressor Speed:** {{ states('sensor.cx_compressor_speed_2') }}%
-          **Fan Speed:** {{ states('sensor.cx_fan_speed_2') }}%
-
-      - type: markdown
-        title: "⚙️ Helper Inputs"
-        content: |
-          **Fluid Density:** {{ states('input_number.cx_fluid_density') }} kg/m³
-          **Fluid Specific Heat:** {{ states('input_number.cx_fluid_specific_heat') }} kJ/(kg·°C)
-
-      - type: markdown
-        title: "📊 Calculated Values (Manual Check)"
-        content: |
-          **Power Calc (V×I):** {{ (states('sensor.cx50_input_ac_voltage')|float * states('sensor.cx50_input_ac_current')|float)|round(0) }}W
-          **Temp Delta Calc:** {{ (states('sensor.cx50_outlet_water_temp_c')|float - states('sensor.cx50_inlet_water_temp_c')|float)|round(2) }}°C
-          **COP Calc:** {{ (states('sensor.cx_thermal_power_output')|float / states('sensor.cx_electrical_power_input')|float)|round(2) if states('sensor.cx_electrical_power_input')|float > 0 else 'N/A' }}
-          **Fan Avg Calc:** {{ ((states('sensor.cx50_c45_ec_fan_motor_1_speed')|float + states('sensor.cx50_c46_ec_fan_motor_2_speed')|float) / 2 / 10)|round(1) }}%
