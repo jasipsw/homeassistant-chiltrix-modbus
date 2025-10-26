@@ -1,0 +1,360 @@
+sensor:
+  # ============================================================================
+  # COST CALCULATION SENSORS
+  # ============================================================================
+  # These sensors track operating costs and savings
+
+  # ========================================================================
+  # CURRENT ELECTRICITY RATE (Time-of-Use Aware)
+  # ========================================================================
+
+  - name: "CX Current Time Period"
+    unique_id: cx_current_time_period
+    state: >
+      {% set hour = now().hour %}
+      {% set is_weekend = now().weekday() in [5, 6] %}
+      {% set rate_structure = states('input_select.cx_rate_structure') | default('Flat Rate') %}
+      {% set weekend_type = states('input_select.cx_weekend_rate_type') | default('Always Off-Peak') %}
+
+      {% if rate_structure == 'Flat Rate' %}
+        Flat
+      {% elif is_weekend and weekend_type == 'Always Off-Peak' %}
+        Off-Peak
+      {% else %}
+        {% set peak_start = states('input_number.cx_peak_start_hour') | int(16) %}
+        {% set peak_end = states('input_number.cx_peak_end_hour') | int(21) %}
+
+        {% if hour >= peak_start and hour < peak_end %}
+          Peak
+        {% else %}
+          Off-Peak
+        {% endif %}
+      {% endif %}
+    icon: mdi:clock-time-eight
+
+  - name: "CX Current Electric Rate"
+    unique_id: cx_current_electric_rate
+    state: >
+      {% set rate_structure = states('input_select.cx_rate_structure') | default('Flat Rate') %}
+      {% set time_period = states('sensor.cx_current_time_period') %}
+
+      {% if rate_structure == 'Flat Rate' or time_period == 'Flat' %}
+        {{ states('input_number.cx_electric_rate_flat') | float(0.15) }}
+      {% elif time_period == 'Peak' %}
+        {{ states('input_number.cx_electric_rate_peak') | float(0.25) }}
+      {% elif time_period == 'Mid-Peak' %}
+        {{ states('input_number.cx_electric_rate_mid_peak') | float(0.18) }}
+      {% else %}
+        {{ states('input_number.cx_electric_rate_off_peak') | float(0.10) }}
+      {% endif %}
+    unit_of_measurement: "$/kWh"
+    device_class: monetary
+    icon: mdi:currency-usd
+
+  # ========================================================================
+  # REAL-TIME OPERATING COSTS
+  # ========================================================================
+
+  - name: "CX Current Operating Cost"
+    unique_id: cx_current_operating_cost
+    state: >
+      {% set power_kw = states('sensor.cx50_compressor_current_value_p15') | float(0) / 1000 %}
+      {% set rate = states('sensor.cx_current_electric_rate') | float(0.15) %}
+      {% set cost_per_hour = power_kw * rate %}
+      {{ cost_per_hour | round(3) %}
+    unit_of_measurement: "$/h"
+    device_class: monetary
+    state_class: measurement
+    icon: mdi:cash-clock
+
+  - name: "CX Cost Per Minute"
+    unique_id: cx_cost_per_minute
+    state: >
+      {% set cost_per_hour = states('sensor.cx_current_operating_cost') | float(0) %}
+      {{ (cost_per_hour / 60) | round(4) }}
+    unit_of_measurement: "$/min"
+    device_class: monetary
+    state_class: measurement
+    icon: mdi:clock-fast
+
+  # ========================================================================
+  # COST PER UNIT OF THERMAL ENERGY
+  # ========================================================================
+
+  - name: "CX Cost per kWh Thermal"
+    unique_id: cx_cost_per_kwh_thermal
+    state: >
+      {% set cop = states('sensor.cx_cop_calculated') | float(0) %}
+      {% set electric_rate = states('sensor.cx_current_electric_rate') | float(0.15) %}
+      {% if cop > 0 %}
+        {{ (electric_rate / cop) | round(4) }}
+      {% else %}
+        unavailable
+      {% endif %}
+    unit_of_measurement: "$/kWh"
+    device_class: monetary
+    icon: mdi:fire-circle
+
+  - name: "CX Cost per Therm Thermal"
+    unique_id: cx_cost_per_therm_thermal
+    state: >
+      {% set cost_per_kwh = states('sensor.cx_cost_per_kwh_thermal') | float(0) %}
+      {# 1 therm = 29.3 kWh #}
+      {{ (cost_per_kwh * 29.3) | round(3) }}
+    unit_of_measurement: "$/therm"
+    device_class: monetary
+    icon: mdi:fire
+
+  # ========================================================================
+  # DAILY/MONTHLY COST ESTIMATES
+  # ========================================================================
+
+  - name: "CX Estimated Daily Cost"
+    unique_id: cx_estimated_daily_cost
+    state: >
+      {% set cost_per_hour = states('sensor.cx_current_operating_cost') | float(0) %}
+      {% set run_hours_daily = 8 %}  {# Adjust based on typical daily runtime #}
+      {{ (cost_per_hour * run_hours_daily) | round(2) }}
+    unit_of_measurement: "$/day"
+    device_class: monetary
+    icon: mdi:calendar-today
+
+  - name: "CX Estimated Monthly Cost"
+    unique_id: cx_estimated_monthly_cost
+    state: >
+      {% set daily_cost = states('sensor.cx_estimated_daily_cost') | float(0) %}
+      {{ (daily_cost * 30) | round(2) }}
+    unit_of_measurement: "$/month"
+    device_class: monetary
+    icon: mdi:calendar-month
+
+  # ========================================================================
+  # MODE-SPECIFIC OPERATING COSTS
+  # ========================================================================
+
+  - name: "CX Heating Mode Cost"
+    unique_id: cx_heating_mode_cost
+    state: >
+      {% set operating_state = states('sensor.cx50_operating_mode') | int(0) %}
+      {% set cost = states('sensor.cx_current_operating_cost') | float(0) %}
+      {% if operating_state == 2 %}
+        {{ cost }}
+      {% else %}
+        0
+      {% endif %}
+    unit_of_measurement: "$/h"
+    device_class: monetary
+    state_class: measurement
+    icon: mdi:fire
+
+  - name: "CX Cooling Mode Cost"
+    unique_id: cx_cooling_mode_cost
+    state: >
+      {% set operating_state = states('sensor.cx50_operating_mode') | int(0) %}
+      {% set cost = states('sensor.cx_current_operating_cost') | float(0) %}
+      {% if operating_state == 1 %}
+        {{ cost }}
+      {% else %}
+        0
+      {% endif %}
+    unit_of_measurement: "$/h"
+    device_class: monetary
+    state_class: measurement
+    icon: mdi:snowflake
+
+  - name: "CX DHW Mode Cost"
+    unique_id: cx_dhw_mode_cost
+    state: >
+      {% set operating_state = states('sensor.cx50_operating_mode') | int(0) %}
+      {% set cost = states('sensor.cx_current_operating_cost') | float(0) %}
+      {% if operating_state == 4 %}
+        {{ cost }}
+      {% else %}
+        0
+      {% endif %}
+    unit_of_measurement: "$/h"
+    device_class: monetary
+    state_class: measurement
+    icon: mdi:water-boiler
+
+  # ========================================================================
+  # ALTERNATIVE FUEL COST COMPARISONS
+  # ========================================================================
+
+  - name: "CX Natural Gas Equivalent Cost"
+    unique_id: cx_gas_equivalent_cost
+    state: >
+      {% set thermal_kw = states('sensor.cx_thermal_power_output') | float(0) %}
+      {% set gas_rate = states('input_number.cx_gas_rate') | float(1.50) %}
+      {% set furnace_eff = states('input_number.cx_gas_furnace_efficiency') | float(0.85) / 100 %}
+
+      {% if thermal_kw > 0 %}
+        {# Convert kW to BTU/h, then to therms/h, adjust for efficiency #}
+        {% set btu_per_hour = thermal_kw * 3412 %}
+        {% set therms_per_hour = btu_per_hour / 100000 / furnace_eff %}
+        {% set gas_cost_per_hour = therms_per_hour * gas_rate %}
+        {{ gas_cost_per_hour | round(3) }}
+      {% else %}
+        0
+      {% endif %}
+    unit_of_measurement: "$/h"
+    device_class: monetary
+    state_class: measurement
+    icon: mdi:fire
+
+  - name: "CX Heating Oil Equivalent Cost"
+    unique_id: cx_oil_equivalent_cost
+    state: >
+      {% set thermal_kw = states('sensor.cx_thermal_power_output') | float(0) %}
+      {% set oil_rate = states('input_number.cx_oil_rate') | float(4.00) %}
+      {% set furnace_eff = 0.85 %}  {# Oil furnaces typically 85% efficient #}
+
+      {% if thermal_kw > 0 %}
+        {# Convert kW to BTU/h, then to gallons/h, adjust for efficiency #}
+        {% set btu_per_hour = thermal_kw * 3412 %}
+        {% set gallons_per_hour = btu_per_hour / 138500 / furnace_eff %}
+        {% set oil_cost_per_hour = gallons_per_hour * oil_rate %}
+        {{ oil_cost_per_hour | round(3) }}
+      {% else %}
+        0
+      {% endif %}
+    unit_of_measurement: "$/h"
+    device_class: monetary
+    state_class: measurement
+    icon: mdi:oil
+
+  - name: "CX Propane Equivalent Cost"
+    unique_id: cx_propane_equivalent_cost
+    state: >
+      {% set thermal_kw = states('sensor.cx_thermal_power_output') | float(0) %}
+      {% set propane_rate = states('input_number.cx_propane_rate') | float(3.50) %}
+      {% set furnace_eff = 0.90 %}  {# Propane furnaces typically 90% efficient #}
+
+      {% if thermal_kw > 0 %}
+        {# Convert kW to BTU/h, then to gallons/h, adjust for efficiency #}
+        {% set btu_per_hour = thermal_kw * 3412 %}
+        {% set gallons_per_hour = btu_per_hour / 91500 / furnace_eff %}
+        {% set propane_cost_per_hour = gallons_per_hour * propane_rate %}
+        {{ propane_cost_per_hour | round(3) }}
+      {% else %}
+        0
+      {% endif %}
+    unit_of_measurement: "$/h"
+    device_class: monetary
+    state_class: measurement
+    icon: mdi:fire
+
+  - name: "CX Electric Resistance Equivalent Cost"
+    unique_id: cx_resistance_equivalent_cost
+    state: >
+      {% set thermal_kw = states('sensor.cx_thermal_power_output') | float(0) %}
+      {% set electric_rate = states('sensor.cx_current_electric_rate') | float(0.15) %}
+
+      {% if thermal_kw > 0 %}
+        {# Electric resistance is 100% efficient: 1 kW in = 1 kW out #}
+        {% set resistance_cost = thermal_kw * electric_rate %}
+        {{ resistance_cost | round(3) }}
+      {% else %}
+        0
+      {% endif %}
+    unit_of_measurement: "$/h"
+    device_class: monetary
+    state_class: measurement
+    icon: mdi:lightning-bolt
+
+  # ========================================================================
+  # SAVINGS CALCULATIONS
+  # ========================================================================
+
+  - name: "CX Savings vs Gas"
+    unique_id: cx_savings_vs_gas
+    state: >
+      {% set gas_cost = states('sensor.cx_natural_gas_equivalent_cost') | float(0) %}
+      {% set hp_cost = states('sensor.cx_current_operating_cost') | float(0) %}
+      {{ (gas_cost - hp_cost) | round(3) }}
+    unit_of_measurement: "$/h"
+    device_class: monetary
+    state_class: measurement
+    icon: mdi:piggy-bank
+
+  - name: "CX Savings vs Oil"
+    unique_id: cx_savings_vs_oil
+    state: >
+      {% set oil_cost = states('sensor.cx_heating_oil_equivalent_cost') | float(0) %}
+      {% set hp_cost = states('sensor.cx_current_operating_cost') | float(0) %}
+      {{ (oil_cost - hp_cost) | round(3) }}
+    unit_of_measurement: "$/h"
+    device_class: monetary
+    state_class: measurement
+    icon: mdi:piggy-bank
+
+  - name: "CX Savings vs Propane"
+    unique_id: cx_savings_vs_propane
+    state: >
+      {% set propane_cost = states('sensor.cx_propane_equivalent_cost') | float(0) %}
+      {% set hp_cost = states('sensor.cx_current_operating_cost') | float(0) %}
+      {{ (propane_cost - hp_cost) | round(3) }}
+    unit_of_measurement: "$/h"
+    device_class: monetary
+    state_class: measurement
+    icon: mdi:piggy-bank
+
+  - name: "CX Savings vs Electric Resistance"
+    unique_id: cx_savings_vs_resistance
+    state: >
+      {% set resistance_cost = states('sensor.cx_electric_resistance_equivalent_cost') | float(0) %}
+      {% set hp_cost = states('sensor.cx_current_operating_cost') | float(0) %}
+      {{ (resistance_cost - hp_cost) | round(3) }}
+    unit_of_measurement: "$/h"
+    device_class: monetary
+    state_class: measurement
+    icon: mdi:piggy-bank
+
+  - name: "CX Savings Percentage"
+    unique_id: cx_savings_percentage
+    state: >
+      {% set comparison_fuel = states('input_select.cx_comparison_fuel') | default('Natural Gas') %}
+      {% set hp_cost = states('sensor.cx_current_operating_cost') | float(0) %}
+
+      {% if comparison_fuel == 'Natural Gas' %}
+        {% set alt_cost = states('sensor.cx_natural_gas_equivalent_cost') | float(0) %}
+      {% elif comparison_fuel == 'Heating Oil' %}
+        {% set alt_cost = states('sensor.cx_heating_oil_equivalent_cost') | float(0) %}
+      {% elif comparison_fuel == 'Propane' %}
+        {% set alt_cost = states('sensor.cx_propane_equivalent_cost') | float(0) %}
+      {% elif comparison_fuel == 'Electric Resistance' %}
+        {% set alt_cost = states('sensor.cx_electric_resistance_equivalent_cost') | float(0) %}
+      {% else %}
+        {% set alt_cost = 0 %}
+      {% endif %}
+
+      {% if alt_cost > 0 and hp_cost > 0 %}
+        {{ (((alt_cost - hp_cost) / alt_cost) * 100) | round(1) }}
+      {% else %}
+        0
+      {% endif %}
+    unit_of_measurement: "%"
+    icon: mdi:percent
+
+  # ========================================================================
+  # ESTIMATED ANNUAL COSTS & SAVINGS
+  # ========================================================================
+
+  - name: "CX Estimated Annual Cost"
+    unique_id: cx_estimated_annual_cost
+    state: >
+      {% set monthly_cost = states('sensor.cx_estimated_monthly_cost') | float(0) %}
+      {{ (monthly_cost * 12) | round(2) }}
+    unit_of_measurement: "$/year"
+    device_class: monetary
+    icon: mdi:calendar
+
+  - name: "CX Estimated Annual Savings"
+    unique_id: cx_estimated_annual_savings
+    state: >
+      {% set savings_per_hour = states('sensor.cx_savings_vs_gas') | float(0) %}
+      {% set hours_per_year = 8 * 365 %}  {# Assumes 8 hours/day average runtime #}
+      {{ (savings_per_hour * hours_per_year) | round(2) }}
+    unit_of_measurement: "$/year"
+    device_class: monetary
+    icon: mdi:piggy-bank-outline
