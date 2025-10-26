@@ -3,50 +3,17 @@ views:
   - title: Sensor Values
     cards:
       - type: markdown
-        title: "📊 CX50 Modbus Registers"
+        title: "📊 CX50 Modbus Sensors"
         content: |
-          {% set register_map = {
-            'sensor.cx50_inlet_water_temp_c': 202,
-            'sensor.cx50_outlet_water_temp_c': 203,
-            'sensor.cx50_ambient_temp_c': 204,
-            'sensor.cx50_coil_temp_c': 205,
-            'sensor.cx50_discharge_temp_c': 206,
-            'sensor.cx50_suction_temp_c': 207,
-            'sensor.cx50_setpoint_temp_c': 209,
-            'sensor.cx50_dhw_setpoint_c': 213,
-            'sensor.cx50_antifreeze_temp_c': 214,
-            'sensor.cx50_operating_mode': 243,
-            'sensor.cx50_error_code': 244,
-            'sensor.cx50_input_ac_voltage': 256,
-            'sensor.cx50_input_ac_current': 256,
-            'sensor.cx50_pump_flow_lpm': 257,
-            'sensor.cx50_compressor_frequency': 258,
-            'sensor.cx50_c45_ec_fan_motor_1_speed': 259,
-            'sensor.cx50_c46_ec_fan_motor_2_speed': 259,
-            'sensor.cx50_pump_speed': 260,
-            'sensor.cx50_system_pressure': 261,
-            'sensor.cx50_total_run_hours': 264,
-            'sensor.cx50_compressor_starts': 281,
-            'sensor.cx50_defrost_count': 285,
-            'sensor.cx50_silent_mode': 262,
-            'sensor.cx50_dhw_priority': 263,
-            'sensor.cx50_defrost_active': 5,
-            'sensor.cx50_pump_enabled': 6
-          } %}
-
-          {% set pattern = 'sensor.cx50' %}
-          {% set matching_sensors = states.sensor | selectattr('entity_id', 'match', pattern) | list %}
+          {% set matching_sensors = states.sensor | selectattr('entity_id', 'search', '^sensor\.cx50') | list %}
 
           {% if matching_sensors %}
-          ## CX50 Modbus Sensors ({{ matching_sensors | count }} total)
+          ## All CX50 Modbus Sensors ({{ matching_sensors | count }} total)
 
-          {% for sensor in matching_sensors | sort(attribute='entity_id') %}
-          **{{ sensor.name }}**
-          - Entity ID: `{{ sensor.entity_id }}`
-          - Register: `{{ register_map.get(sensor.entity_id, 'Unknown') }}` (0x{{ '%X' % register_map.get(sensor.entity_id, 0) if register_map.get(sensor.entity_id) else '??' }})
-          - Value: **{{ sensor.state }}** {{ sensor.attributes.unit_of_measurement if sensor.attributes.unit_of_measurement is defined else '' }}
-          - State Class: {{ sensor.attributes.state_class if sensor.attributes.state_class is defined else 'N/A' }}
-
+          | Name | Entity ID | Value |
+          |------|-----------|-------|
+          {% for sensor in matching_sensors | sort(attribute='entity_id') -%}
+          | {{ sensor.name }} | `{{ sensor.entity_id }}` | {{ sensor.state }} {{ sensor.attributes.unit_of_measurement if sensor.attributes.unit_of_measurement else '' }} |
           {% endfor %}
           {% else %}
           No CX50 sensors found.
