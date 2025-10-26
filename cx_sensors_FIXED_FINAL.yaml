@@ -32,7 +32,7 @@
       icon: mdi:delta
       state: >
         {% set inlet = states('sensor.cx50_inlet_water_temp_c') | float(0) %}
-        {% set outlet = states('sensor.cx50_outlet_water_temp_degc') | float(0) %}
+        {% set outlet = states('sensor.cx50_outlet_water_temp_c') | float(0) %}
         {{ (outlet - inlet) | round(2) }}
 
     # ------------------------------------------------------------------------
@@ -105,7 +105,7 @@
       icon: mdi:fire
       state: >-
         {% set inlet = states('sensor.cx50_inlet_water_temp_c') | float(0) %}
-        {% set outlet = states('sensor.cx50_outlet_water_temp_degc') | float(0) %}
+        {% set outlet = states('sensor.cx50_outlet_water_temp_c') | float(0) %}
         {% set flow_lpm = states('sensor.cx50_pump_flow_lpm') | float(0) %}
         {% set density = states('input_number.cx_fluid_density') | float(1025) %}
         {% set specific_heat = states('input_number.cx_fluid_specific_heat') | float(3.95) %}
@@ -118,7 +118,7 @@
         {{ thermal_output | round(0) }}
       availability: >-
         {{ states('sensor.cx50_inlet_water_temp_c') not in ['unknown', 'unavailable']
-            and states('sensor.cx50_outlet_water_temp_degc') not in ['unknown', 'unavailable']
+            and states('sensor.cx50_outlet_water_temp_c') not in ['unknown', 'unavailable']
             and states('sensor.cx50_pump_flow_lpm') not in ['unknown', 'unavailable'] }}
 
     - name: "CX Thermal Power Output kW"
