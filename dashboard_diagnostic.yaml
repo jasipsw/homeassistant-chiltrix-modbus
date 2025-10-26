@@ -40,7 +40,7 @@ views:
           **COP Cooling:** {{ states('sensor.cx_cop_cooling_mode') }}
           **COP DHW:** {{ states('sensor.cx_cop_dhw_mode') }}
           **Efficiency Rating:** {{ states('sensor.cx_efficiency_rating') }}
-          **Compressor Speed:** {{ states('sensor.cx_compressor_speed') }}%
+          **Compressor Speed:** {{ states('sensor.cx_compressor_speed_2') }}%
           **Fan Speed:** {{ states('sensor.cx_fan_speed_2') }}%
 
       - type: markdown
