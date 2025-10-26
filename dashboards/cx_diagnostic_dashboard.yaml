@@ -1,0 +1,249 @@
+# Chiltrix CX50-2 Comprehensive Diagnostic Dashboard
+# Complete Modbus Register Map with C-Parameters and P-Parameters
+# Reference: CX50-2 IOM Manual + Remote-Gateway-BACnet-Guide
+
+title: CX50-2 Diagnostics
+views:
+  - title: Sensor Values & Register Map
+    icon: mdi:table-search
+    cards:
+      - type: markdown
+        title: "📊 CX50-2 Complete Modbus Register Map"
+        content: |
+          ## Temperature Sensors (C-Parameters)
+
+          | Dec | Hex | Type | Sensor Name | Entity ID | C-Param | Value |
+          |-----|-----|------|-------------|-----------|---------|-------|
+          | 202 | 0xCA | Sens | Inlet Water Temp | `sensor.cx_water_inlet_temperature` | **C02** - Water inlet temp (°C×10) | {{ states('sensor.cx_water_inlet_temperature') }} °C |
+          | 203 | 0xCB | Sens | Outlet Water Temp | `sensor.cx_water_outlet_temperature` | **C03** - Water outlet temp (°C×10) | {{ states('sensor.cx_water_outlet_temperature') }} °C |
+          | 204 | 0xCC | Sens | Ambient Temp | `sensor.cx_ambient_temperature` | **C04** - Ambient temp (°C×10) | {{ states('sensor.cx_ambient_temperature') }} °C |
+          | 205 | 0xCD | Sens | Coil Temp | `sensor.cx_coil_temperature` | **C05** - Coil temp (°C×10) | {{ states('sensor.cx_coil_temperature') }} °C |
+          | 206 | 0xCE | Sens | Discharge Temp | `sensor.cx_discharge_temperature` | **C06** - Compressor discharge temp (°C×10) | {{ states('sensor.cx_discharge_temperature') }} °C |
+          | 207 | 0xCF | Sens | Suction Temp | `sensor.cx_suction_temperature` | **C07** - Suction temp (°C×10) | {{ states('sensor.cx_suction_temperature') }} °C |
+          | 209 | 0xD1 | Sens | Setpoint Temp | `sensor.cx_setpoint_temperature` | **C09** - Setpoint temp (°C×10) | {{ states('sensor.cx_setpoint_temperature') }} °C |
+          | 213 | 0xD5 | Sens | DHW Setpoint | `sensor.cx_dhw_setpoint` | **C13** - DHW setpoint (°C×10) | {{ states('sensor.cx_dhw_setpoint') }} °C |
+          | 214 | 0xD6 | Sens | Antifreeze Temp | `sensor.cx_antifreeze_temperature` | **C14** - Antifreeze setpoint (°C×10) | {{ states('sensor.cx_antifreeze_temperature') }} °C |
+
+          ---
+
+          ## Status Registers
+
+          | Dec | Hex | Type | Sensor Name | Entity ID | Description | Value |
+          |-----|-----|------|-------------|-----------|-------------|-------|
+          | 243 | 0xF3 | Reg | Operating State | `sensor.cx_operating_state` | System mode (0=Off, 1=Heat, 2=Cool, 3=Auto, 4=DHW, 5=Defrost, 6=Error) | {{ states('sensor.cx_operating_state') }} |
+          | 244 | 0xF4 | Reg | Error Code | `sensor.cx_error_code` | Current error code (0=No error) | {{ states('sensor.cx_error_code') }} |
+
+          ---
+
+          ## Performance Sensors
+
+          | Dec | Hex | Type | Sensor Name | Entity ID | Description | Value |
+          |-----|-----|------|-------------|-----------|-------------|-------|
+          | 256 | 0x100 | Reg | Current Power | `sensor.cx_current_power` | Electrical power consumption | {{ states('sensor.cx_current_power') }} W |
+          | 257 | 0x101 | Reg | Flow Rate | `sensor.cx_flow_rate` | Water flow rate (L/min × 10) | {{ states('sensor.cx_flow_rate') }} L/min |
+          | 258 | 0x102 | Reg | Compressor Speed | `sensor.cx_compressor_speed` | Compressor frequency % | {{ states('sensor.cx_compressor_speed') }} % |
+          | 259 | 0x103 | Reg | Fan Speed | `sensor.cx_fan_speed` | Outdoor fan speed % | {{ states('sensor.cx_fan_speed') }} % |
+          | 260 | 0x104 | Reg | Pump Speed | `sensor.cx_pump_speed` | Water pump speed % | {{ states('sensor.cx_pump_speed') }} % |
+          | 261 | 0x105 | Reg | System Pressure | `sensor.cx_system_pressure` | Refrigerant pressure (bar × 10) | {{ states('sensor.cx_system_pressure') }} bar |
+
+          ---
+
+          ## Diagnostic Counters
+
+          | Dec | Hex | Type | Sensor Name | Entity ID | Description | Value |
+          |-----|-----|------|-------------|-----------|-------------|-------|
+          | 264 | 0x108 | Reg32 | Total Run Hours | `sensor.cx_total_run_hours` | Cumulative operating hours (word swapped) | {{ states('sensor.cx_total_run_hours') }} h |
+          | 281 | 0x119 | Reg32 | Compressor Starts | `sensor.cx_compressor_starts` | Total compressor start count (word swapped) | {{ states('sensor.cx_compressor_starts') }} |
+          | 285 | 0x11D | Reg | Defrost Count | `sensor.cx_defrost_count` | Total defrost cycle count | {{ states('sensor.cx_defrost_count') }} |
+
+          ---
+
+          ## Binary Status Sensors (Coils/Discrete Inputs)
+
+          | Addr | Hex | Type | Sensor Name | Entity ID | Description | Value |
+          |------|-----|------|-------------|-----------|-------------|-------|
+          | 0 | 0x00 | Coil | Power Status | `binary_sensor.cx_power_status` | System on/off state | {{ states('binary_sensor.cx_power_status') }} |
+          | 1 | 0x01 | Coil | Heating Mode | `binary_sensor.cx_heating_mode` | Heating mode active | {{ states('binary_sensor.cx_heating_mode') }} |
+          | 2 | 0x02 | Coil | Cooling Mode | `binary_sensor.cx_cooling_mode` | Cooling mode active | {{ states('binary_sensor.cx_cooling_mode') }} |
+          | 4 | 0x04 | Coil | DHW Mode Active | `binary_sensor.cx_dhw_mode` | DHW mode active | {{ states('binary_sensor.cx_dhw_mode') }} |
+          | 5 | 0x05 | Coil | Defrost Active | `binary_sensor.cx_defrost_active` | Defrost cycle running | {{ states('binary_sensor.cx_defrost_active') }} |
+          | 6 | 0x06 | Coil | Pump Enabled | `binary_sensor.cx_pump_enabled` | Water pump status | {{ states('binary_sensor.cx_pump_enabled') }} |
+          | 262 | 0x106 | Reg | Silent Mode | `binary_sensor.cx_silent_mode` | Silent mode enabled | {{ states('binary_sensor.cx_silent_mode') }} |
+          | 263 | 0x107 | Reg | DHW Priority | `binary_sensor.cx_dhw_priority` | DHW priority enabled | {{ states('binary_sensor.cx_dhw_priority') }} |
+          | 244 | 0xF4 | Reg | Error Status | `binary_sensor.cx_error_status` | Error present (non-zero = error) | {{ states('binary_sensor.cx_error_status') }} |
+
+          ---
+
+          ## Register Address Structure Overview
+
+          ### C-Parameters (Status/Sensor Values - Read-Only)
+          - **Base Address:** 200 (0xC8)
+          - **Formula:** C-Parameter# = Address - 200
+          - **Purpose:** Real-time sensor readings and status values
+          - **Data Type:** Most are int16 with scale factor 0.1 (value × 10)
+          - **From IOM Manual pages 59-60:**
+            - **C02** (202) = Water inlet temperature
+            - **C03** (203) = Water outlet temperature
+            - **C04** (204) = Ambient temperature
+            - **C05** (205) = Coil temperature
+            - **C06** (206) = Compressor discharge temperature
+            - **C07** (207) = Suction temperature
+            - **C09** (209) = Setpoint temperature
+            - **C13** (213) = DHW setpoint
+            - **C14** (214) = Antifreeze setpoint
+            - **C15-C70** (215-270) = Additional status values
+
+          ---
+
+          ### P-Parameters (Configuration Settings - Read/Write)
+          - **Base Address:** Estimated 100 (0x64) - **Not currently monitored**
+          - **Formula:** P-Parameter# = Address - 100 (estimated)
+          - **Purpose:** System configuration and operational parameters
+          - **Access:** Read/write via Modbus holding registers
+          - **From BACnet Guide pages 54-57 (Appendix C.1):**
+
+          #### Complete P-Parameter List (P00-P78):
+
+          | P# | BACnet ID | Parameter Name | Description |
+          |----|-----------|----------------|-------------|
+          | P00 | BV-1 | Power-Down Recovery Function | System restart behavior after power loss |
+          | P01 | BV-2 | Single / Three Phase Selection | Electrical phase configuration |
+          | P02 | AV-3 | Power Frequency | 50Hz or 60Hz selection |
+          | P03 | BV-4 | Heat Source Selection | Air source vs water source |
+          | P04 | BV-5 | Heating Temp Control Method | Control algorithm selection |
+          | P05 | BV-6 | Defrost Method Selections | Defrost strategy |
+          | P06 | BV-7 | Freecooling Validation | Enable/disable freecooling |
+          | P07 | BV-8 | Frequency Control Method | Compressor speed control |
+          | P08 | BV-9 | DHW Validation | Enable/disable DHW mode |
+          | P09 | BV-10 | Air Cond And Heating Validation | Enable heating |
+          | P10 | BV-11 | Air Cond And Cooling Validation | Enable cooling |
+          | P11 | AV-12 | DHW Hot Water Temp Hysteresis | DHW temperature deadband |
+          | P12 | AV-13 | AC Temp Hysteresis | Heating/cooling deadband |
+          | P13 | AV-14 | Fan Motor Category | Fan type selection |
+          | P14 | AV-15 | Maximum Speed Of The Fan | Fan speed limit |
+          | P15 | AV-16 | Heating Fan Speed Control Temp Diff | Fan control logic |
+          | P16 | AV-17 | Cooling Fan Speed Control Temp Diff | Fan control logic |
+          | P17 | BV-18 | Defrost Method | Defrost algorithm |
+          | P18 | AV-19 | Defrost Starting Temp | Defrost initiation temperature |
+          | P19 | AV-20 | Defrost Interval Time Multiple Rate | Defrost timing |
+          | P20 | AV-21 | The First Defrost Interval | Initial defrost delay |
+          | P21 | AV-22 | Defrost Exist Temp | Defrost exit temperature |
+          | P22 | AV-23 | Hot Water Frequency Limitation | DHW compressor limit |
+          | P23 | AV-24 | AC Heating Au Mode Highest Temp | Auto mode high limit |
+          | P24 | AV-25 | AC Heating Au Mode Offset Temp | Auto mode offset |
+          | P25 | BV-26 | Solenoid Valve Function Parameters | Valve configuration |
+          | P26 | BV-27 | C4 Water Pump Type Selection | Pump type |
+          | P27 | MV-28 | Water Pump Working Mode | Pump control mode |
+          | P28 | AV-29 | EC Water Pump C4 Minimum Speed | Pump minimum RPM |
+          | P29 | BV-30 | C5 Water Pump Type Selection | Secondary pump type |
+          | P30 | AV-31 | DHW E-Heater Activated Ambient Temp | E-heater activation temp |
+          | P31 | BV-32 | Electric Heating Function | Enable electric backup |
+          | P32 | AV-33 | AC E-Heater Activated Ambient Temp | AC backup heater temp |
+          | P33 | AV-34 | 2nd Heat Source Starting Air Temp | Backup heat activation |
+          | P34 | AV-35 | AC Anti-Freezing Temp | Anti-freeze protection |
+          | P35 | AV-36 | Virus Killing Interval Days | Legionella prevention interval |
+          | P36 | AV-37 | Start Virus Killing Time | Legionella cycle start time |
+          | P37 | AV-38 | Virus Killing Holding Time | Legionella cycle duration |
+          | P38 | AV-39 | Target Temp Of Virus Killing | Legionella target temperature |
+          | P39 | BV-40 | AC Water Flow Switch Type Selection | Flow switch type |
+          | P40 | AV-41 | AC Minimum Water Flow | Flow rate minimum |
+          | P41 | BV-42 | Water Src Water Flow Switch Type Sel | Water source flow switch |
+          | P42 | AV-43 | Lowest Water Flow Of Water Source | Water source minimum flow |
+          | P43 | AV-44 | Air Src Heat Pump Freecooling Func | Freecooling parameter |
+          | P44 | AV-45 | Air Src Freecooling Function | Freecooling enable |
+          | P45 | AV-46 | Cooling Maximum Set Temp | Cooling high limit |
+          | P46 | AV-47 | Heating Maximum Set Temp | Heating high limit |
+          | P47 | AV-48 | DHW The Highest Set Temp | DHW maximum temp |
+          | P48 | AV-49 | Debugging Fixed Operating Frequency | Test mode frequency |
+          | P49 | BV-50 | Run Setting Frequency | Fixed frequency mode |
+          | P50 | AV-51 | EEV Manually Open Degree (Heating) | Expansion valve heating |
+          | P51 | AV-52 | EEV Manually Open Degree (Cooling) | Expansion valve cooling |
+          | P52 | MV-53 | EEV Control Mode | Expansion valve mode |
+          | P53 | AV-54 | Target Overheat Degree (Heating) | Superheat target heating |
+          | P54 | AV-55 | Target Overheat Degree (Cooling) | Superheat target cooling |
+          | P55 | AV-56 | Night Mode Validation | Night mode enable |
+          | P56 | AV-57 | Night Mode Starting Point | Night mode start time |
+          | P57 | AV-58 | Night Mode Ending Point | Night mode end time |
+          | P58 | AV-59 | Model Selection | Unit model configuration |
+          | P59 | AV-60 | Use High And Low Pressure Transmitter | Pressure sensor enable |
+          | P60 | AV-61 | Temp Diff To Ctrl C4 Water Pump Speed | Pump speed ΔT control |
+          | P61 | AV-62 | Compressor Manufacturer | Compressor brand code |
+          | P62 | BV-63 | Forced Sterilization | Manual legionella cycle |
+          | P63 | BV-64 | System Parameter Recovery | Factory reset |
+          | P64 | AV-65 | Compressor Manufacturer 2 | Secondary compressor brand |
+          | P65 | BV-66 | Virus Killing Function Validation | Legionella enable |
+          | P66 | AV-67 | EEV Max Manual Open | Maximum valve opening |
+          | P67 | AV-68 | Defrosting EEV Manual Open | Defrost valve position |
+          | P68 | AV-69 | AC Electric Heater Power W | Heater wattage |
+          | P69 | BV-70 | C Or F Degree | Temperature units |
+          | P70 | BV-71 | Heat Recovery Function Validation | Heat recovery enable |
+          | P71 | AV-72 | AC Rated Voltage | Nominal voltage |
+          | P72 | AV-73 | AC Heat Transfer Coefficient | Heat exchanger efficiency |
+          | P73 | AV-74 | AC Voltage Compensation | Voltage correction factor |
+          | P74 | BV-75 | Cooling Inlet Target Temp Range | Cooling target mode |
+          | P75 | AV-76 | AC Heating Minimum Frequency | Minimum compressor speed |
+          | P76 | AV-77 | Own 485 Address | Modbus slave address |
+          | P77 | AV-78 | Error Recovery | Error reset parameter |
+
+          **Note:** P-Parameters are **NOT currently monitored** by the sensors in cx_modbus.yaml.
+          These configuration parameters can be read/written via Modbus holding registers if needed.
+
+          **Estimated P-Parameter Addresses** (if P00 starts at 100):
+          - P00-P77 would be at addresses 100-177
+          - Access via Modbus function code 03 (read) or 06/16 (write)
+
+          ---
+
+          ## Data Type Reference
+
+          | Type | Description | Bytes | Range | Scale |
+          |------|-------------|-------|-------|-------|
+          | int16 | Signed 16-bit integer | 2 | -32768 to 32767 | Usually 0.1 (÷10) |
+          | uint16 | Unsigned 16-bit integer | 2 | 0 to 65535 | Varies |
+          | uint32 | Unsigned 32-bit integer | 4 | 0 to 4294967295 | 1 |
+          | Coil | Single bit | 1 bit | 0 or 1 | N/A |
+
+          **Word Swap:** 32-bit registers use word swap (high word first, then low word)
+
+          ---
+
+          ## Modbus Function Codes
+
+          | Code | Function | Register Type | Access |
+          |------|----------|---------------|--------|
+          | 01 | Read Coils | Discrete Output (Coil) | Read |
+          | 02 | Read Discrete Inputs | Discrete Input | Read |
+          | 03 | Read Holding Registers | Analog Output (Holding) | Read |
+          | 04 | Read Input Registers | Analog Input | Read |
+          | 05 | Write Single Coil | Discrete Output | Write |
+          | 06 | Write Single Register | Holding Register | Write |
+          | 15 | Write Multiple Coils | Discrete Output | Write |
+          | 16 | Write Multiple Registers | Holding Register | Write |
+
+          ---
+
+          ## Connection Information
+
+          - **Protocol:** Modbus TCP/IP or Modbus RTU
+          - **TCP Port:** 502 (standard Modbus)
+          - **Slave ID:** 1 (default)
+          - **Baud Rate:** 9600 (RTU)
+          - **Parity:** None
+          - **Data Bits:** 8
+          - **Stop Bits:** 1
+
+          ---
+
+          ## Documentation References
+
+          1. **CX50-2-IOM.pdf** - Installation & Operation Manual
+             - C-Parameters: Pages 59-60
+             - P-Parameters: Pages 54-58
+
+          2. **Remote-Gateway-BACnet-Guide-rev2.pdf** - ProtoAir BACnet Gateway Guide
+             - Complete P-Parameter list with BACnet mappings: Pages 54-57 (Appendix C.1)
+             - Status registers: Pages 54-57
+
+          3. **cx_modbus.yaml** - Home Assistant Modbus Configuration
+             - Current sensor definitions
+             - Register addresses and data types
