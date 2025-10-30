@@ -1,0 +1,78 @@
+# Energy Integration Sensors for Chiltrix Heat Pumps
+# Compatible with: CX34, CX35, CX50-2, and other Chiltrix models
+#
+# These sensors convert instantaneous power (kW) to accumulated energy (kWh)
+# using Riemann sum integration for minute-by-minute tracking
+#
+# Add to configuration.yaml:
+# sensor: !include cx_energy_sensors.yaml
+#
+# Or merge into existing sensor section
+
+# ============================================================================
+# RIEMANN SUM INTEGRATION SENSORS
+# ============================================================================
+# These sensors integrate power over time to calculate total energy consumption
+# Method: left - uses left Riemann sum (most accurate for frequently updating sensors)
+# Precision: 3 decimal places for accurate minute-by-minute tracking
+
+- platform: integration
+  source: sensor.cx_thermal_power_output
+  name: "CX Thermal Energy Output"
+  unique_id: cx_thermal_energy_output
+  unit_prefix: k
+  unit_time: h
+  method: left
+  round: 3
+
+- platform: integration
+  source: sensor.cx_current_power
+  name: "CX Electrical Energy Input"
+  unique_id: cx_electrical_energy_input
+  unit_prefix: k
+  unit_time: h
+  method: left
+  round: 3
+
+# ============================================================================
+# NOTES ON INTEGRATION METHOD
+# ============================================================================
+#
+# The integration sensor uses Riemann sum to calculate energy:
+# - Takes instantaneous power readings (kW or W)
+# - Multiplies by time elapsed between readings
+# - Accumulates the result to get total energy (kWh)
+#
+# For example:
+# - 25 kW thermal power running for 1 minute = 25 × (1/60) = 0.417 kWh
+# - 25 kW thermal power running for 1 hour = 25 kWh
+#
+# The sensors will:
+# - Update continuously as power changes
+# - Accumulate energy over time
+# - Can be reset using utility meters (see cx_energy_utility_meters.yaml)
+# - Display in Home Assistant Energy dashboard
+#
+# Method options:
+# - left: Left Riemann sum (recommended for most cases)
+# - right: Right Riemann sum
+# - trapezoidal: Average of left and right (most accurate but slower)
+#
+# ============================================================================
+# CONFIGURATION REQUIREMENTS
+# ============================================================================
+#
+# Required source sensors (from cx_cop_templates.yaml and cx_modbus.yaml):
+# - sensor.cx_thermal_power_output (kW) - Thermal power delivered
+# - sensor.cx_current_power (W) - Electrical power consumed
+#
+# Both sensors must have:
+# - state_class: measurement (already configured)
+# - Numeric values (no 'unavailable' or 'unknown')
+#
+# ============================================================================
+# UTILITY METER CONFIGURATION
+# ============================================================================
+#
+# To track energy by hour/day/month, add utility meters in configuration.yaml:
+# See cx_energy_utility_meters.yaml for complete configuration

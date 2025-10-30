@@ -1,0 +1,524 @@
+# Energy Analysis Dashboard for Chiltrix Heat Pumps
+# Compatible with: CX34, CX35, CX50-2, and other Chiltrix models
+#
+# This dashboard provides detailed energy consumption analysis with:
+# - Minute-by-minute thermal and electrical energy tracking
+# - Hourly energy consumption bar graphs
+# - Daily energy summaries
+# - Comparison of thermal output vs electrical input
+# - Space for design load comparisons (Manual J, HERS report)
+#
+# REQUIRES:
+# - cx_energy_sensors.yaml (integration sensors)
+# - cx_energy_utility_meters.yaml (utility meters)
+# - ApexCharts card installed via HACS
+#
+# To install ApexCharts:
+# 1. Go to HACS -> Frontend
+# 2. Search for "ApexCharts"
+# 3. Install and restart Home Assistant
+
+title: Chiltrix Energy Analysis
+path: cx-energy-analysis
+icon: mdi:chart-bar
+badges: []
+cards:
+  # ==========================================================================
+  # HEADER - CURRENT STATUS
+  # ==========================================================================
+
+  - type: horizontal-stack
+    cards:
+      - type: entity
+        entity: sensor.cx_thermal_power_output
+        name: Current Thermal Power
+        icon: mdi:fire
+
+      - type: entity
+        entity: sensor.cx_current_power
+        name: Current Electrical Power
+        icon: mdi:flash
+
+      - type: entity
+        entity: sensor.cx_cop
+        name: Current COP
+        icon: mdi:gauge
+
+      - type: entity
+        entity: sensor.cx_operating_state
+        name: Operating Mode
+        icon: mdi:state-machine
+
+  # ==========================================================================
+  # REAL-TIME POWER MONITORING (Last Hour)
+  # ==========================================================================
+
+  - type: custom:apexcharts-card
+    header:
+      show: true
+      title: "Real-Time Power (Last Hour)"
+      show_states: true
+    graph_span: 1h
+    span:
+      start: hour
+    now:
+      show: true
+      label: Now
+    yaxis:
+      - id: power
+        apex_config:
+          tickAmount: 5
+    series:
+      - entity: sensor.cx_thermal_power_output
+        name: Thermal Power
+        type: area
+        color: "#FF6B6B"
+        opacity: 0.3
+        stroke_width: 2
+        yaxis_id: power
+        group_by:
+          func: avg
+          duration: 1min
+
+      - entity: sensor.cx_current_power
+        name: Electrical Power
+        type: area
+        color: "#4ECDC4"
+        opacity: 0.3
+        stroke_width: 2
+        yaxis_id: power
+        transform: "return x / 1000;"  # Convert W to kW
+        group_by:
+          func: avg
+          duration: 1min
+
+  # ==========================================================================
+  # MINUTE-BY-MINUTE ENERGY CONSUMPTION (Last 2 Hours)
+  # ==========================================================================
+
+  - type: custom:apexcharts-card
+    header:
+      show: true
+      title: "Energy Consumption - Minute by Minute (Last 2 Hours)"
+      show_states: true
+    graph_span: 2h
+    update_interval: 1min
+    span:
+      start: hour
+    apex_config:
+      chart:
+        type: bar
+        stacked: false
+      plotOptions:
+        bar:
+          columnWidth: "90%"
+          dataLabels:
+            position: top
+      dataLabels:
+        enabled: false
+      legend:
+        show: true
+        position: top
+    yaxis:
+      - id: energy
+        decimals: 3
+        apex_config:
+          title:
+            text: "Energy (kWh)"
+          tickAmount: 5
+    series:
+      - entity: sensor.cx_thermal_energy_output
+        name: Thermal Energy (kWh)
+        type: column
+        color: "#FF6B6B"
+        yaxis_id: energy
+        group_by:
+          func: delta
+          duration: 1min
+
+      - entity: sensor.cx_electrical_energy_input
+        name: Electrical Energy (kWh)
+        type: column
+        color: "#4ECDC4"
+        yaxis_id: energy
+        group_by:
+          func: delta
+          duration: 1min
+
+  # ==========================================================================
+  # HOURLY ENERGY CONSUMPTION (Last 24 Hours)
+  # ==========================================================================
+
+  - type: custom:apexcharts-card
+    header:
+      show: true
+      title: "Hourly Energy Consumption (Last 24 Hours)"
+      show_states: true
+    graph_span: 24h
+    span:
+      start: day
+    apex_config:
+      chart:
+        type: bar
+        stacked: false
+      plotOptions:
+        bar:
+          columnWidth: "80%"
+          dataLabels:
+            position: top
+      dataLabels:
+        enabled: true
+        offsetY: -20
+        style:
+          fontSize: "10px"
+      legend:
+        show: true
+        position: top
+    yaxis:
+      - id: energy
+        decimals: 2
+        apex_config:
+          title:
+            text: "Energy (kWh)"
+          tickAmount: 5
+    series:
+      - entity: sensor.cx_thermal_energy_output
+        name: Thermal Energy
+        type: column
+        color: "#FF6B6B"
+        yaxis_id: energy
+        group_by:
+          func: delta
+          duration: 1h
+
+      - entity: sensor.cx_electrical_energy_input
+        name: Electrical Energy
+        type: column
+        color: "#4ECDC4"
+        yaxis_id: energy
+        group_by:
+          func: delta
+          duration: 1h
+
+  # ==========================================================================
+  # DAILY ENERGY CONSUMPTION (Last 7 Days)
+  # ==========================================================================
+
+  - type: custom:apexcharts-card
+    header:
+      show: true
+      title: "Daily Energy Consumption (Last 7 Days)"
+      show_states: true
+    graph_span: 7d
+    span:
+      start: day
+    apex_config:
+      chart:
+        type: bar
+        stacked: false
+      plotOptions:
+        bar:
+          columnWidth: "70%"
+          dataLabels:
+            position: top
+      dataLabels:
+        enabled: true
+        offsetY: -20
+        style:
+          fontSize: "12px"
+          fontWeight: "bold"
+      legend:
+        show: true
+        position: top
+    yaxis:
+      - id: energy
+        decimals: 1
+        apex_config:
+          title:
+            text: "Energy (kWh)"
+          tickAmount: 5
+    series:
+      - entity: sensor.cx_thermal_energy_output
+        name: Thermal Energy
+        type: column
+        color: "#FF6B6B"
+        yaxis_id: energy
+        group_by:
+          func: delta
+          duration: 1d
+
+      - entity: sensor.cx_electrical_energy_input
+        name: Electrical Energy
+        type: column
+        color: "#4ECDC4"
+        yaxis_id: energy
+        group_by:
+          func: delta
+          duration: 1d
+
+  # ==========================================================================
+  # MONTHLY COMPARISON (Last 12 Months)
+  # ==========================================================================
+
+  - type: custom:apexcharts-card
+    header:
+      show: true
+      title: "Monthly Energy Consumption (Last 12 Months)"
+      show_states: true
+    graph_span: 365d
+    span:
+      start: year
+    apex_config:
+      chart:
+        type: bar
+        stacked: false
+      plotOptions:
+        bar:
+          columnWidth: "70%"
+      dataLabels:
+        enabled: true
+        style:
+          fontSize: "10px"
+      legend:
+        show: true
+        position: top
+    yaxis:
+      - id: energy
+        decimals: 0
+        apex_config:
+          title:
+            text: "Energy (kWh)"
+          tickAmount: 5
+    series:
+      - entity: sensor.cx_thermal_energy_output
+        name: Thermal Energy
+        type: column
+        color: "#FF6B6B"
+        yaxis_id: energy
+        group_by:
+          func: delta
+          duration: 1month
+
+      - entity: sensor.cx_electrical_energy_input
+        name: Electrical Energy
+        type: column
+        color: "#4ECDC4"
+        yaxis_id: energy
+        group_by:
+          func: delta
+          duration: 1month
+
+  # ==========================================================================
+  # COP OVER TIME (Last 24 Hours)
+  # ==========================================================================
+
+  - type: custom:apexcharts-card
+    header:
+      show: true
+      title: "Coefficient of Performance (COP) - Last 24 Hours"
+      show_states: true
+    graph_span: 24h
+    span:
+      start: day
+    apex_config:
+      chart:
+        type: line
+      stroke:
+        curve: smooth
+        width: 2
+      fill:
+        type: gradient
+        gradient:
+          shadeIntensity: 1
+          opacityFrom: 0.7
+          opacityTo: 0.3
+      legend:
+        show: true
+        position: top
+    yaxis:
+      - id: cop
+        min: 0
+        max: 6
+        decimals: 2
+        apex_config:
+          title:
+            text: "COP"
+          tickAmount: 6
+    series:
+      - entity: sensor.cx_cop
+        name: COP
+        type: area
+        color: "#95E1D3"
+        yaxis_id: cop
+        group_by:
+          func: avg
+          duration: 5min
+
+  # ==========================================================================
+  # ENERGY SUMMARY CARDS
+  # ==========================================================================
+
+  - type: horizontal-stack
+    cards:
+      - type: entity
+        entity: sensor.cx_thermal_energy_output
+        name: Total Thermal Energy
+        icon: mdi:fire
+
+      - type: entity
+        entity: sensor.cx_electrical_energy_input
+        name: Total Electrical Energy
+        icon: mdi:flash
+
+      - type: entity
+        entity: sensor.cx_thermal_energy_daily_heating
+        name: Today's Heating
+        icon: mdi:radiator
+
+      - type: entity
+        entity: sensor.cx_thermal_energy_monthly_heating
+        name: This Month's Heating
+        icon: mdi:calendar-month
+
+  # ==========================================================================
+  # DESIGN LOAD COMPARISON (Manual J / HERS Report)
+  # ==========================================================================
+  # This section allows you to compare actual energy consumption against
+  # design specifications from your HVAC technicians and HERS report
+
+  - type: markdown
+    content: |
+      ## Design Load Comparison
+
+      ### Manual J Design Specifications
+      - **Design Heating Load:** ___ BTU/hr (___ kW)
+      - **Design Temperature:** ___ °F
+      - **House Size:** 3,500 sq ft
+
+      ### HERS Report Data
+      - **HERS Score:** ___
+      - **Estimated Annual Heating Load:** ___ kWh
+      - **Estimated Annual Cooling Load:** ___ kWh
+
+      ### Actual Performance (Update from sensors above)
+      - **Peak Heating Power:** ___ kW
+      - **Daily Average:** ___ kWh/day
+      - **Monthly Total:** ___ kWh/month
+
+      _Update these values with your actual design specifications_
+
+  # ==========================================================================
+  # LOAD COMPARISON CHART (Planned vs Actual)
+  # ==========================================================================
+  # To create comparison chart with design load:
+  # 1. Create input_number helper with your design load value
+  # 2. Uncomment and configure the chart below
+
+  # - type: custom:apexcharts-card
+  #   header:
+  #     show: true
+  #     title: "Design Load vs Actual Load"
+  #     show_states: true
+  #   graph_span: 24h
+  #   series:
+  #     - entity: sensor.cx_thermal_power_output
+  #       name: Actual Thermal Power
+  #       type: line
+  #       color: "#FF6B6B"
+  #       stroke_width: 2
+  #
+  #     - entity: input_number.design_heating_load
+  #       name: Design Heating Load
+  #       type: line
+  #       color: "#FFA500"
+  #       stroke_width: 2
+  #       stroke_dash: 5
+
+  # ==========================================================================
+  # STATISTICS & INSIGHTS
+  # ==========================================================================
+
+  - type: entities
+    title: Energy Statistics
+    entities:
+      - entity: sensor.cx_thermal_energy_hourly_heating
+        name: "This Hour (Heating)"
+      - entity: sensor.cx_thermal_energy_daily_heating
+        name: "Today (Heating)"
+      - entity: sensor.cx_thermal_energy_monthly_heating
+        name: "This Month (Heating)"
+      - entity: sensor.cx_thermal_energy_yearly_heating
+        name: "This Year (Heating)"
+      - type: divider
+      - entity: sensor.cx_electrical_energy_hourly_heating
+        name: "Electrical - This Hour"
+      - entity: sensor.cx_electrical_energy_daily_heating
+        name: "Electrical - Today"
+      - entity: sensor.cx_electrical_energy_monthly_heating
+        name: "Electrical - This Month"
+      - entity: sensor.cx_electrical_energy_yearly_heating
+        name: "Electrical - This Year"
+
+# ============================================================================
+# CONFIGURATION NOTES
+# ============================================================================
+#
+# This dashboard provides comprehensive energy analysis:
+#
+# 1. MINUTE-BY-MINUTE: Shows energy consumed each minute over the last 2 hours
+#    - Useful for identifying short-term patterns and cycling behavior
+#    - Each bar represents energy used in a 1-minute interval
+#    - Example: If thermal power is 25 kW, each minute bar shows ~0.417 kWh
+#
+# 2. HOURLY: Shows energy consumed each hour over the last 24 hours
+#    - Useful for daily pattern analysis
+#    - Shows when heating demand is highest
+#    - Compare against time-of-use electricity rates
+#
+# 3. DAILY: Shows total energy consumed each day over the last week
+#    - Useful for weekly trends and weather impact
+#    - Compare against outdoor temperature data
+#
+# 4. MONTHLY: Shows total energy consumed each month over the last year
+#    - Useful for seasonal analysis
+#    - Compare against Manual J/HERS projections
+#
+# 5. COP TRACKING: Shows system efficiency over time
+#    - Higher COP = better efficiency
+#    - Compare COP during different operating conditions
+#
+# ============================================================================
+# COMPARING TO DESIGN SPECIFICATIONS
+# ============================================================================
+#
+# To compare actual performance vs design specs:
+#
+# 1. Get your Manual J calculation from HVAC technician
+#    - Look for "Design Heating Load" in BTU/hr
+#    - Convert to kW: BTU/hr ÷ 3412 = kW
+#    - Example: 85,000 BTU/hr ÷ 3412 = 24.9 kW
+#
+# 2. Get your HERS report from home construction
+#    - Look for "Estimated Annual Heating Energy"
+#    - Compare to your yearly thermal energy sensor
+#
+# 3. Create input_number helpers for comparison:
+#    - input_number.design_heating_load (kW)
+#    - input_number.hers_annual_heating (kWh)
+#
+# 4. Uncomment the "Load Comparison Chart" section above
+#
+# 5. Analyze differences:
+#    - Actual < Design = Good! Better than expected
+#    - Actual > Design = Investigate insulation, air leaks, etc.
+#
+# ============================================================================
+# TYPICAL VALUES FOR 3,500 SQ FT HOUSE
+# ============================================================================
+#
+# Rule of thumb: 30-50 BTU/hr per sq ft
+# - 3,500 sq ft × 30 BTU/hr = 105,000 BTU/hr = 30.8 kW (well insulated)
+# - 3,500 sq ft × 40 BTU/hr = 140,000 BTU/hr = 41.0 kW (average)
+# - 3,500 sq ft × 50 BTU/hr = 175,000 BTU/hr = 51.3 kW (poorly insulated)
+#
+# Your 25 kW measurement suggests excellent insulation or mild weather!

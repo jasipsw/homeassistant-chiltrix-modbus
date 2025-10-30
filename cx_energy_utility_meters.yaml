@@ -1,0 +1,238 @@
+# Utility Meters for Energy Tracking - Chiltrix Heat Pumps
+# Compatible with: CX34, CX35, CX50-2, and other Chiltrix models
+#
+# These utility meters track energy consumption over different time periods
+# They automatically reset at the specified intervals (hourly, daily, monthly, yearly)
+#
+# Add to configuration.yaml:
+# utility_meter: !include cx_energy_utility_meters.yaml
+#
+# REQUIRES: cx_energy_sensors.yaml to be configured first
+
+# ============================================================================
+# THERMAL ENERGY OUTPUT TRACKING
+# ============================================================================
+
+# Hourly thermal energy output (resets every hour)
+cx_thermal_energy_hourly:
+  source: sensor.cx_thermal_energy_output
+  name: "CX Thermal Energy (Hourly)"
+  unique_id: cx_thermal_energy_hourly
+  cycle: hourly
+  cron_pattern: "0 * * * *"  # Reset at the top of every hour
+  tariffs:
+    - heating
+    - cooling
+    - dhw
+    - idle
+
+# Daily thermal energy output (resets every day at midnight)
+cx_thermal_energy_daily:
+  source: sensor.cx_thermal_energy_output
+  name: "CX Thermal Energy (Daily)"
+  unique_id: cx_thermal_energy_daily
+  cycle: daily
+  tariffs:
+    - heating
+    - cooling
+    - dhw
+    - idle
+
+# Monthly thermal energy output (resets on the 1st of each month)
+cx_thermal_energy_monthly:
+  source: sensor.cx_thermal_energy_output
+  name: "CX Thermal Energy (Monthly)"
+  unique_id: cx_thermal_energy_monthly
+  cycle: monthly
+  tariffs:
+    - heating
+    - cooling
+    - dhw
+    - idle
+
+# Yearly thermal energy output (resets on January 1st)
+cx_thermal_energy_yearly:
+  source: sensor.cx_thermal_energy_output
+  name: "CX Thermal Energy (Yearly)"
+  unique_id: cx_thermal_energy_yearly
+  cycle: yearly
+  tariffs:
+    - heating
+    - cooling
+    - dhw
+    - idle
+
+# ============================================================================
+# ELECTRICAL ENERGY INPUT TRACKING
+# ============================================================================
+
+# Hourly electrical energy input (resets every hour)
+cx_electrical_energy_hourly:
+  source: sensor.cx_electrical_energy_input
+  name: "CX Electrical Energy (Hourly)"
+  unique_id: cx_electrical_energy_hourly
+  cycle: hourly
+  cron_pattern: "0 * * * *"  # Reset at the top of every hour
+  tariffs:
+    - heating
+    - cooling
+    - dhw
+    - idle
+
+# Daily electrical energy input (resets every day at midnight)
+cx_electrical_energy_daily:
+  source: sensor.cx_electrical_energy_input
+  name: "CX Electrical Energy (Daily)"
+  unique_id: cx_electrical_energy_daily
+  cycle: daily
+  tariffs:
+    - heating
+    - cooling
+    - dhw
+    - idle
+
+# Monthly electrical energy input (resets on the 1st of each month)
+cx_electrical_energy_monthly:
+  source: sensor.cx_electrical_energy_input
+  name: "CX Electrical Energy (Monthly)"
+  unique_id: cx_electrical_energy_monthly
+  cycle: monthly
+  tariffs:
+    - heating
+    - cooling
+    - dhw
+    - idle
+
+# Yearly electrical energy input (resets on January 1st)
+cx_electrical_energy_yearly:
+  source: sensor.cx_electrical_energy_input
+  name: "CX Electrical Energy (Yearly)"
+  unique_id: cx_electrical_energy_yearly
+  cycle: yearly
+  tariffs:
+    - heating
+    - cooling
+    - dhw
+    - idle
+
+# ============================================================================
+# TARIFF SWITCHING AUTOMATION (OPTIONAL)
+# ============================================================================
+# Add to automations.yaml to automatically switch tariffs based on operating mode
+#
+# - id: cx_energy_tariff_switch
+#   alias: "Chiltrix - Switch Energy Tariff by Mode"
+#   description: "Automatically switch utility meter tariffs based on operating state"
+#   trigger:
+#     - platform: state
+#       entity_id: sensor.cx_operating_state
+#   action:
+#     - choose:
+#         # Heating Mode (State = 1)
+#         - conditions:
+#             - condition: state
+#               entity_id: sensor.cx_operating_state
+#               state: "1"
+#           sequence:
+#             - service: utility_meter.select_tariff
+#               target:
+#                 entity_id:
+#                   - utility_meter.cx_thermal_energy_hourly
+#                   - utility_meter.cx_thermal_energy_daily
+#                   - utility_meter.cx_thermal_energy_monthly
+#                   - utility_meter.cx_thermal_energy_yearly
+#                   - utility_meter.cx_electrical_energy_hourly
+#                   - utility_meter.cx_electrical_energy_daily
+#                   - utility_meter.cx_electrical_energy_monthly
+#                   - utility_meter.cx_electrical_energy_yearly
+#               data:
+#                 tariff: heating
+#
+#         # Cooling Mode (State = 2)
+#         - conditions:
+#             - condition: state
+#               entity_id: sensor.cx_operating_state
+#               state: "2"
+#           sequence:
+#             - service: utility_meter.select_tariff
+#               target:
+#                 entity_id:
+#                   - utility_meter.cx_thermal_energy_hourly
+#                   - utility_meter.cx_thermal_energy_daily
+#                   - utility_meter.cx_thermal_energy_monthly
+#                   - utility_meter.cx_thermal_energy_yearly
+#                   - utility_meter.cx_electrical_energy_hourly
+#                   - utility_meter.cx_electrical_energy_daily
+#                   - utility_meter.cx_electrical_energy_monthly
+#                   - utility_meter.cx_electrical_energy_yearly
+#               data:
+#                 tariff: cooling
+#
+#         # DHW Mode (State = 4)
+#         - conditions:
+#             - condition: state
+#               entity_id: sensor.cx_operating_state
+#               state: "4"
+#           sequence:
+#             - service: utility_meter.select_tariff
+#               target:
+#                 entity_id:
+#                   - utility_meter.cx_thermal_energy_hourly
+#                   - utility_meter.cx_thermal_energy_daily
+#                   - utility_meter.cx_thermal_energy_monthly
+#                   - utility_meter.cx_thermal_energy_yearly
+#                   - utility_meter.cx_electrical_energy_hourly
+#                   - utility_meter.cx_electrical_energy_daily
+#                   - utility_meter.cx_electrical_energy_monthly
+#                   - utility_meter.cx_electrical_energy_yearly
+#               data:
+#                 tariff: dhw
+#
+#         # Idle/Off (State = 0 or other)
+#       default:
+#         - service: utility_meter.select_tariff
+#           target:
+#             entity_id:
+#               - utility_meter.cx_thermal_energy_hourly
+#               - utility_meter.cx_thermal_energy_daily
+#               - utility_meter.cx_thermal_energy_monthly
+#               - utility_meter.cx_thermal_energy_yearly
+#               - utility_meter.cx_electrical_energy_hourly
+#               - utility_meter.cx_electrical_energy_daily
+#               - utility_meter.cx_electrical_energy_monthly
+#               - utility_meter.cx_electrical_energy_yearly
+#           data:
+#             tariff: idle
+
+# ============================================================================
+# USAGE NOTES
+# ============================================================================
+#
+# Each utility meter creates separate sensors for each tariff:
+# - sensor.cx_thermal_energy_hourly_heating
+# - sensor.cx_thermal_energy_hourly_cooling
+# - sensor.cx_thermal_energy_hourly_dhw
+# - sensor.cx_thermal_energy_hourly_idle
+# (and similar for daily, monthly, yearly)
+#
+# Hourly meters reset at the top of each hour (e.g., 1:00, 2:00, 3:00)
+# Daily meters reset at midnight
+# Monthly meters reset on the 1st of each month at midnight
+# Yearly meters reset on January 1st at midnight
+#
+# For minute-by-minute visualization, use the raw integration sensor:
+# - sensor.cx_thermal_energy_output
+# - sensor.cx_electrical_energy_input
+#
+# These continuously accumulate and can be displayed in graphs with
+# 1-minute granularity using ApexCharts or History Graph cards.
+#
+# ============================================================================
+# ENERGY DASHBOARD INTEGRATION
+# ============================================================================
+#
+# To add these sensors to the Home Assistant Energy dashboard:
+# 1. Go to Configuration -> Energy
+# 2. Add Grid Consumption: sensor.cx_electrical_energy_input
+# 3. Add Individual Devices: sensor.cx_thermal_energy_output
+# 4. Energy dashboard will automatically show daily/monthly/yearly totals
